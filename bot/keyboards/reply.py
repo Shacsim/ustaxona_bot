@@ -20,8 +20,9 @@ def master_menu(lang: str = "uz", is_admin: bool = False) -> ReplyKeyboardMarkup
         ],
         [
             KeyboardButton(text=btn("search", lang)),
-            KeyboardButton(text=btn("profile", lang)),
+            KeyboardButton(text=btn("my_income", lang)),
         ],
+        [KeyboardButton(text=btn("profile", lang))],
     ]
     if is_admin:
         keyboard.append([KeyboardButton(text=BTN_ADMIN)])

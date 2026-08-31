@@ -101,6 +101,41 @@ class OrderRepository:
         )
         return int(result.scalar_one())
 
+    async def master_income(
+        self, master_id: int, since: datetime | None
+    ) -> tuple[int, int]:
+        """Usta daromadi: (tayyor buyurtmalar soni, jami summa)."""
+        q = select(
+            func.count(), func.coalesce(func.sum(Order.price), 0)
+        ).where(
+            Order.status == OrderStatus.READY,
+            Order.completed_by == master_id,
+        )
+        if since is not None:
+            q = q.where(Order.completed_at >= since)
+        row = (await self.session.execute(q)).one()
+        return int(row[0]), int(row[1])
+
+    async def income_per_master(self, since: datetime | None) -> list[dict]:
+        """Davr bo'yicha ustalar kesimida daromad, kamayish tartibida."""
+        q = (
+            select(
+                User.full_name,
+                func.count(Order.id),
+                func.coalesce(func.sum(Order.price), 0),
+            )
+            .join(Order, Order.completed_by == User.id)
+            .where(Order.status == OrderStatus.READY)
+            .group_by(User.id, User.full_name)
+            .order_by(func.coalesce(func.sum(Order.price), 0).desc())
+        )
+        if since is not None:
+            q = q.where(Order.completed_at >= since)
+        rows = (await self.session.execute(q)).all()
+        return [
+            {"name": r[0], "count": int(r[1]), "total": int(r[2])} for r in rows
+        ]
+
     async def stats_per_master(self) -> list[dict]:
         """Har bir usta bo'yicha: qabul qilingan va tayyorlangan buyurtmalar soni."""
         created = dict(

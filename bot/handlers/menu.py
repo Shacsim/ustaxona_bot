@@ -9,7 +9,7 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.keyboards.reply import master_menu
-from bot.utils.formatters import fmt_dt, fmt_price
+from bot.utils.formatters import fmt_dt, fmt_price, period_start
 from bot.utils.i18n import btn_variants, t
 from database.models import OrderStatus, User
 from database.repositories import OrderRepository
@@ -57,6 +57,35 @@ async def list_ready(message: Message, session: AsyncSession, user: User) -> Non
         lines.append(
             f"✅ <b>#{o.order_number}</b> — {fmt_price(o.price)} — {escape(master)} "
             f"({fmt_dt(o.completed_at)})"
+        )
+    await message.answer("\n".join(lines))
+
+
+INCOME_PERIODS = [
+    ("📅", "period_today", "today"),
+    ("🗓", "period_week", "week"),
+    ("📆", "period_month", "month"),
+    ("∑", "period_all", "all"),
+]
+
+
+@router.message(StateFilter(None), F.text.in_(btn_variants("my_income")))
+async def my_income(message: Message, session: AsyncSession, user: User) -> None:
+    """Ustaning o'z daromadi: bugun / hafta / oy / jami."""
+    lang = user.language
+    repo = OrderRepository(session)
+    lines = [t("income_header", lang, name=escape(user.full_name))]
+    for icon, label_key, period in INCOME_PERIODS:
+        count, total = await repo.master_income(user.id, period_start(period))
+        lines.append(
+            t(
+                "income_row",
+                lang,
+                icon=icon,
+                label=t(label_key, lang),
+                total=fmt_price(total),
+                count=count,
+            )
         )
     await message.answer("\n".join(lines))
 

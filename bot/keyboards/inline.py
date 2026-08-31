@@ -52,8 +52,33 @@ def admin_panel_kb() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text="👨‍🔧 Ustalar", callback_data="admin:masters")],
             [InlineKeyboardButton(text="📊 Statistika", callback_data="admin:stats")],
+            [InlineKeyboardButton(text="💰 Daromadlar", callback_data="admin:income:all")],
             [InlineKeyboardButton(text="📦 Buyurtmalar", callback_data="admin:orders")],
             [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="admin:settings")],
+        ]
+    )
+
+
+def income_period_kb(active: str) -> InlineKeyboardMarkup:
+    """Daromadlar ko'rinishi uchun davr tanlash tugmalari."""
+    periods = [
+        ("today", "📅 Bugun"),
+        ("week", "🗓 Hafta"),
+        ("month", "📆 Oy"),
+        ("all", "∑ Jami"),
+    ]
+    row = [
+        InlineKeyboardButton(
+            text=(f"• {label} •" if key == active else label),
+            callback_data=f"admin:income:{key}",
+        )
+        for key, label in periods
+    ]
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            row[:2],
+            row[2:],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin:panel")],
         ]
     )
 

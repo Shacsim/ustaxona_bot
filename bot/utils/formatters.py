@@ -18,6 +18,19 @@ def fmt_dt(dt: datetime | None) -> str:
     return dt.astimezone(TZ).strftime("%d.%m.%Y %H:%M")
 
 
+def period_start(period: str) -> datetime | None:
+    """Davr boshini (Toshkent vaqti) qaytaradi: today/week/month; all → None."""
+    now = datetime.now(TZ)
+    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if period == "today":
+        return midnight
+    if period == "week":
+        return midnight - timedelta(days=now.weekday())  # dushanbadan boshlab
+    if period == "month":
+        return midnight.replace(day=1)
+    return None
+
+
 def fmt_price(price: int | None) -> str:
     if price is None:
         return "—"

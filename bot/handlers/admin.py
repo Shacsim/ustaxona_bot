@@ -12,12 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.keyboards.inline import (
     admin_panel_kb,
     back_to_panel_kb,
+    income_period_kb,
     master_detail_kb,
     masters_list_kb,
 )
 from bot.keyboards.reply import BTN_ADMIN, master_menu
 from bot.middlewares import AdminOnlyMiddleware
-from bot.utils.formatters import fmt_dt, fmt_price
+from bot.utils.formatters import fmt_dt, fmt_price, period_start
 from bot.utils.i18n import t
 from config import settings
 from database.models import OrderStatus, User
@@ -195,6 +196,44 @@ async def show_stats(callback: CallbackQuery, session: AsyncSession) -> None:
                 f"Tayyorlagan: {m['completed']}",
             ]
     await callback.message.edit_text("\n".join(lines), reply_markup=back_to_panel_kb())
+    await callback.answer()
+
+
+# ---------- Daromadlar (ustalar kesimida) ----------
+
+INCOME_PERIOD_LABELS = {
+    "today": "📅 Bugun",
+    "week": "🗓 Shu hafta",
+    "month": "📆 Shu oy",
+    "all": "∑ Jami (hozirgacha)",
+}
+
+
+@router.callback_query(F.data.startswith("admin:income:"))
+async def show_income(callback: CallbackQuery, session: AsyncSession) -> None:
+    period = callback.data.split(":")[2]
+    if period not in INCOME_PERIOD_LABELS:
+        period = "all"
+    rows = await OrderRepository(session).income_per_master(period_start(period))
+
+    lines = [f"💰 <b>DAROMADLAR</b> — {INCOME_PERIOD_LABELS[period]}", ""]
+    if rows:
+        total_sum = 0
+        total_count = 0
+        for i, r in enumerate(rows, start=1):
+            lines.append(
+                f"{i}. <b>{escape(r['name'])}</b> — {fmt_price(r['total'])} "
+                f"({r['count']} ta)"
+            )
+            total_sum += r["total"]
+            total_count += r["count"]
+        lines += ["", f"Jami: <b>{fmt_price(total_sum)}</b> ({total_count} ta)"]
+    else:
+        lines.append("Bu davrda tayyor buyurtmalar yo'q.")
+
+    await callback.message.edit_text(
+        "\n".join(lines), reply_markup=income_period_kb(period)
+    )
     await callback.answer()
 
 

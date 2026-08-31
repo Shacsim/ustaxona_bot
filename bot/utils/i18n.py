@@ -15,6 +15,7 @@ BUTTONS = {
     "pending": {"uz": "📋 Kutayotgan buyurtmalar", "ru": "📋 Заказы в ожидании"},
     "ready_list": {"uz": "✅ Tayyor buyurtmalar", "ru": "✅ Готовые заказы"},
     "search": {"uz": "🔎 Buyurtmani topish", "ru": "🔎 Найти заказ"},
+    "my_income": {"uz": "💰 Daromadim", "ru": "💰 Мой доход"},
     "profile": {"uz": "👤 Profil", "ru": "👤 Профиль"},
     "admin": {"uz": "⚙️ Admin panel", "ru": "⚙️ Admin panel"},
     "cancel": {"uz": "❌ Bekor qilish", "ru": "❌ Отмена"},
@@ -350,6 +351,20 @@ TEXTS = {
     },
     "role_admin": {"uz": "👑 Administrator", "ru": "👑 Администратор"},
     "role_master": {"uz": "🔧 Usta", "ru": "🔧 Мастер"},
+
+    # Daromad hisoboti
+    "income_header": {
+        "uz": "💰 <b>DAROMADIM</b>\n👨‍🔧 {name}\n",
+        "ru": "💰 <b>МОЙ ДОХОД</b>\n👨‍🔧 {name}\n",
+    },
+    "income_row": {
+        "uz": "{icon} {label}: <b>{total}</b> — {count} ta buyurtma",
+        "ru": "{icon} {label}: <b>{total}</b> — заказов: {count}",
+    },
+    "period_today": {"uz": "Bugun", "ru": "Сегодня"},
+    "period_week": {"uz": "Shu hafta", "ru": "Эта неделя"},
+    "period_month": {"uz": "Shu oy", "ru": "Этот месяц"},
+    "period_all": {"uz": "Jami (hozirgacha)", "ru": "Всего (за всё время)"},
 }
 
 
