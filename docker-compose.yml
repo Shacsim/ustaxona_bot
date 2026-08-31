@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ustaxona}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ustaxona}
+      POSTGRES_DB: ${POSTGRES_DB:-ustaxona}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ustaxona} -d ${POSTGRES_DB:-ustaxona}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Docker ichida host nomi 'db' bo'ladi — .env dagi localhost'ni bosib o'tadi
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ustaxona}:${POSTGRES_PASSWORD:-ustaxona}@db:5432/${POSTGRES_DB:-ustaxona}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "alembic upgrade head && python main.py"
+
+volumes:
+  pgdata:

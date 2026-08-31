@@ -1,0 +1,21 @@
+# Maxfiy ma'lumotlar — HECH QACHON push qilinmasin
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+
+# Loglar va lokal fayllar
+*.log
+*.db
+*.sqlite3
