@@ -25,6 +25,22 @@ def parse_price(text: str) -> int | None:
     return price
 
 
+def parse_phone(text: str) -> str | None:
+    """'+998 90 123-45-67' → '+998901234567'; noto'g'ri bo'lsa None."""
+    cleaned = re.sub(r"[ \-()]", "", text.strip())
+    if re.fullmatch(r"\+?\d{7,15}", cleaned):
+        return cleaned
+    return None
+
+
+def valid_description(text: str) -> str | None:
+    """Vazifa tavsifi: 3–500 belgi."""
+    desc = text.strip()
+    if 3 <= len(desc) <= 500:
+        return desc
+    return None
+
+
 def valid_name(text: str) -> str | None:
     """Ism: 2–50 belgi, bo'sh emas."""
     name = " ".join(text.split())

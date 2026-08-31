@@ -27,6 +27,7 @@ class UserRepository:
         username: str | None,
         role: UserRole,
         is_active: bool,
+        language: str = "uz",
     ) -> User:
         user = User(
             telegram_id=telegram_id,
@@ -34,6 +35,7 @@ class UserRepository:
             username=username,
             role=role,
             is_active=is_active,
+            language=language,
         )
         self.session.add(user)
         await self.session.commit()
@@ -51,6 +53,12 @@ class UserRepository:
             )
         )
         return list(result.scalars().all())
+
+    async def set_language(self, user_id: int, language: str) -> None:
+        user = await self.session.get(User, user_id)
+        if user is not None:
+            user.language = language
+            await self.session.commit()
 
     async def set_active(self, user_id: int, is_active: bool) -> User | None:
         user = await self.session.get(User, user_id)

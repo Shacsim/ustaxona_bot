@@ -32,28 +32,80 @@ def fmt_work_done(work_done: str) -> str:
 
 
 STATUS_LABELS = {
-    OrderStatus.PENDING: "⏳ KUTILMOQDA",
-    OrderStatus.READY: "✅ TAYYOR",
-    OrderStatus.CANCELLED: "❌ BEKOR QILINGAN",
+    "uz": {
+        OrderStatus.PENDING: "⏳ KUTILMOQDA",
+        OrderStatus.READY: "✅ TAYYOR",
+        OrderStatus.CANCELLED: "❌ BEKOR QILINGAN",
+    },
+    "ru": {
+        OrderStatus.PENDING: "⏳ В ОЖИДАНИИ",
+        OrderStatus.READY: "✅ ГОТОВ",
+        OrderStatus.CANCELLED: "❌ ОТМЕНЁН",
+    },
+}
+
+CARD_LABELS = {
+    "uz": {
+        "title": "📋 <b>BUYURTMA #{n}</b>",
+        "status": "Holati",
+        "customer": "👤 Mijoz",
+        "phone": "📞 Telefon",
+        "task": "🔧 Vazifa",
+        "created_by": "👨‍🔧 Qabul qilgan usta",
+        "completed_by": "👨‍🔧 Tayyorlagan usta",
+        "work": "🔧 <b>Bajarilgan ishlar:</b>",
+        "price": "💰 Xizmat haqqi",
+        "created": "📅 Qabul qilingan",
+        "completed": "📅 Tayyorlangan",
+    },
+    "ru": {
+        "title": "📋 <b>ЗАКАЗ #{n}</b>",
+        "status": "Статус",
+        "customer": "👤 Клиент",
+        "phone": "📞 Телефон",
+        "task": "🔧 Задача",
+        "created_by": "👨‍🔧 Принял мастер",
+        "completed_by": "👨‍🔧 Выполнил мастер",
+        "work": "🔧 <b>Выполненные работы:</b>",
+        "price": "💰 Стоимость",
+        "created": "📅 Принят",
+        "completed": "📅 Готов",
+    },
 }
 
 
 def pending_group_text(order: Order) -> str:
-    """«Kutayotgan buyurtmalar» topic'iga yuboriladigan xabar (3 tilda)."""
+    """«Kutayotgan buyurtmalar» topic'iga yuboriladigan xabar (3 tilda).
+
+    Mazmuni: buyurtma qabul qilindi + tayyor bo'lganda «TAYYOR BUYURTMALAR»
+    bo'limida e'lon qilinishini bildiradi.
+    """
     master = escape(order.creator.full_name)
+    n = order.order_number
     return (
-        f"📥 <b>BUYURTMA QABUL QILINDI — #{order.order_number}</b>\n\n"
-        "🇺🇿 Assalomu alaykum! Buyurtmangiz ustalarimiz tomonidan qabul qilindi.\n"
-        "🔧 Qurilmangiz diagnostika va ta'mirlash jarayonida.\n"
-        "⏳ Iltimos, biroz sabr qiling. Bizni tanlaganingizdan xursandmiz! ❤️\n\n"
-        "🇷🇺 Здравствуйте! Ваш заказ принят нашими мастерами.\n"
-        "🔧 Ваше устройство находится на диагностике и в ремонте.\n"
-        "⏳ Пожалуйста, немного подождите. Спасибо, что выбрали нас! ❤️\n\n"
-        "🇬🇧 Hello! Your order has been received by our technicians.\n"
-        "🔧 Your device is under diagnostics and repair.\n"
-        "⏳ Please be patient. Thank you for choosing us! ❤️\n\n"
+        "📥 <b>BUYURTMA QABUL QILINDI</b>\n"
+        f"🔢 Buyurtma raqami: <b>#{n}</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n\n"
+        "🇺🇿 Assalomu alaykum, hurmatli mijoz!\n"
+        f"Sizning <b>#{n}</b> raqamli buyurtmangiz muvaffaqiyatli qabul qilindi, "
+        "ustalarimiz ishni boshladi. 🔧\n"
+        "⏳ Buyurtmangiz tayyor bo'lishi bilan "
+        "«✅ TAYYOR BUYURTMALAR» bo'limida e'lon qilamiz.\n"
+        "Bizni tanlaganingizdan xursandmiz! ❤️\n\n"
+        "🇷🇺 Здравствуйте, уважаемый клиент!\n"
+        f"Ваш заказ <b>#{n}</b> успешно принят, наши мастера уже приступили к работе. 🔧\n"
+        "⏳ Как только заказ будет готов, мы сообщим об этом "
+        "в разделе «✅ TAYYOR BUYURTMALAR».\n"
+        "Спасибо, что выбрали нас! ❤️\n\n"
+        "🇬🇧 Hello, dear customer!\n"
+        f"Your order <b>#{n}</b> has been received and our technicians have started "
+        "working on it. 🔧\n"
+        "⏳ As soon as it is ready, we will announce it "
+        "in the «✅ TAYYOR BUYURTMALAR» topic.\n"
+        "Thank you for choosing us! ❤️\n\n"
+        "━━━━━━━━━━━━━━━━━━\n"
         f"👨‍🔧 Mas'ul usta / Мастер / Technician: <b>{master}</b>\n"
-        f"🕐 {fmt_dt(order.created_at)}"
+        f"🕐 Qabul qilindi / Принят / Received: {fmt_dt(order.created_at)}"
     )
 
 
@@ -93,24 +145,36 @@ def pending_done_note(order: Order) -> str:
     )
 
 
-def order_card(order: Order) -> str:
+def order_card(order: Order, lang: str = "uz") -> str:
     """Usta uchun buyurtma kartochkasi (qidiruv/ro'yxat)."""
+    lbl = CARD_LABELS.get(lang, CARD_LABELS["uz"])
+    status = STATUS_LABELS.get(lang, STATUS_LABELS["uz"]).get(
+        order.status, order.status
+    )
     lines = [
-        f"📋 <b>BUYURTMA #{order.order_number}</b>",
+        lbl["title"].format(n=order.order_number),
         "",
-        f"Holati: <b>{STATUS_LABELS.get(order.status, order.status)}</b>",
+        f"{lbl['status']}: <b>{status}</b>",
         "",
-        f"👨‍🔧 Qabul qilgan usta: {escape(order.creator.full_name)}",
     ]
+    if order.customer_name:
+        lines.append(f"{lbl['customer']}: <b>{escape(order.customer_name)}</b>")
+    if order.customer_phone:
+        lines.append(f"{lbl['phone']}: <code>{escape(order.customer_phone)}</code>")
+    if order.description:
+        lines.append(f"{lbl['task']}: {escape(order.description)}")
+    if order.customer_name or order.customer_phone or order.description:
+        lines.append("")
+    lines.append(f"{lbl['created_by']}: {escape(order.creator.full_name)}")
     if order.completer:
-        lines.append(f"👨‍🔧 Tayyorlagan usta: {escape(order.completer.full_name)}")
+        lines.append(f"{lbl['completed_by']}: {escape(order.completer.full_name)}")
     if order.work_done:
-        lines += ["", "🔧 <b>Bajarilgan ishlar:</b>", fmt_work_done(order.work_done)]
+        lines += ["", lbl["work"], fmt_work_done(order.work_done)]
     if order.price:
-        lines += ["", f"💰 Xizmat haqqi: <b>{fmt_price(order.price)}</b>"]
-    lines += ["", f"📅 Qabul qilingan: {fmt_dt(order.created_at)}"]
+        lines += ["", f"{lbl['price']}: <b>{fmt_price(order.price)}</b>"]
+    lines += ["", f"{lbl['created']}: {fmt_dt(order.created_at)}"]
     if order.completed_at:
-        lines.append(f"📅 Tayyorlangan: {fmt_dt(order.completed_at)}")
+        lines.append(f"{lbl['completed']}: {fmt_dt(order.completed_at)}")
     return "\n".join(lines)
 
 

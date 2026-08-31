@@ -26,6 +26,7 @@ class User(Base):
     role: Mapped[str] = mapped_column(
         String(16), nullable=False, default=UserRole.MASTER
     )
+    language: Mapped[str] = mapped_column(String(2), nullable=False, default="uz")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

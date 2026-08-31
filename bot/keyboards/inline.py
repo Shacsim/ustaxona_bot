@@ -2,39 +2,46 @@
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from bot.utils.i18n import btn
 from database.models import User
 
 
-def suggested_number_kb(number: int) -> InlineKeyboardMarkup:
+def language_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🇺🇿 O'zbekcha", callback_data="lang:uz"),
+                InlineKeyboardButton(text="🇷🇺 Русский", callback_data="lang:ru"),
+            ]
+        ]
+    )
+
+
+def confirm_new_order_kb(lang: str = "uz") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=f"✅ #{number} raqamini olish",
-                    callback_data=f"neworder:suggest:{number}",
-                )
+                    text=btn("confirm_accept", lang), callback_data="neworder:confirm"
+                ),
+                InlineKeyboardButton(
+                    text=btn("cancel", lang), callback_data="neworder:cancel"
+                ),
             ]
         ]
     )
 
 
-def confirm_new_order_kb() -> InlineKeyboardMarkup:
+def confirm_complete_kb(lang: str = "uz") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Qabul qilindi", callback_data="neworder:confirm"),
-                InlineKeyboardButton(text="❌ Bekor qilish", callback_data="neworder:cancel"),
-            ]
-        ]
-    )
-
-
-def confirm_complete_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="✅ TAYYOR", callback_data="complete:confirm"),
-                InlineKeyboardButton(text="❌ BEKOR QILISH", callback_data="complete:cancel"),
+                InlineKeyboardButton(
+                    text=btn("confirm_ready", lang), callback_data="complete:confirm"
+                ),
+                InlineKeyboardButton(
+                    text=btn("cancel", lang), callback_data="complete:cancel"
+                ),
             ]
         ]
     )

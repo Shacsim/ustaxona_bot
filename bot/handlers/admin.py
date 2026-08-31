@@ -18,6 +18,7 @@ from bot.keyboards.inline import (
 from bot.keyboards.reply import BTN_ADMIN, master_menu
 from bot.middlewares import AdminOnlyMiddleware
 from bot.utils.formatters import fmt_dt, fmt_price
+from bot.utils.i18n import t
 from config import settings
 from database.models import OrderStatus, User
 from database.repositories import OrderRepository, UserRepository
@@ -82,7 +83,9 @@ async def _notify_master(bot: Bot, master: User, text: str, with_menu: bool) -> 
         await bot.send_message(
             master.telegram_id,
             text,
-            reply_markup=master_menu(master.is_admin) if with_menu else None,
+            reply_markup=(
+                master_menu(master.language, master.is_admin) if with_menu else None
+            ),
         )
     except TelegramAPIError:
         logger.warning("Ustaga (%s) xabar yuborib bo'lmadi", master.telegram_id)
@@ -102,11 +105,7 @@ async def activate_master(
         f"✅ <b>{escape(master.full_name)}</b> faollashtirildi."
     )
     await _notify_master(
-        bot,
-        master,
-        "🎉 Profilingiz administrator tomonidan tasdiqlandi!\n\n"
-        "Endi tizimdan to'liq foydalanishingiz mumkin.",
-        with_menu=True,
+        bot, master, t("approved_notice", master.language), with_menu=True
     )
     await callback.answer()
 
@@ -129,7 +128,7 @@ async def block_master(
         f"⛔️ <b>{escape(master.full_name)}</b> bloklandi."
     )
     await _notify_master(
-        bot, master, "⛔️ Profilingiz administrator tomonidan bloklandi.", with_menu=False
+        bot, master, t("blocked_notice", master.language), with_menu=False
     )
     await callback.answer()
 

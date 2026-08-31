@@ -24,11 +24,21 @@ class OrderRepository:
         current_max = result.scalar()
         return (current_max or 0) + 1
 
-    async def create(self, order_number: int, created_by: int) -> Order:
+    async def create(
+        self,
+        order_number: int,
+        created_by: int,
+        customer_name: str | None = None,
+        customer_phone: str | None = None,
+        description: str | None = None,
+    ) -> Order:
         order = Order(
             order_number=order_number,
             status=OrderStatus.PENDING,
             created_by=created_by,
+            customer_name=customer_name,
+            customer_phone=customer_phone,
+            description=description,
         )
         self.session.add(order)
         await self.session.commit()

@@ -8,7 +8,9 @@ class RegistrationStates(StatesGroup):
 
 
 class NewOrderStates(StatesGroup):
-    waiting_order_number = State()
+    waiting_customer_name = State()
+    waiting_customer_phone = State()
+    waiting_description = State()
     confirming_order = State()
 
 

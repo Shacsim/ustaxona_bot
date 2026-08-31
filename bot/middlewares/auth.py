@@ -14,12 +14,14 @@ from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
 DENIED_TEXT = (
-    "❌ Siz ushbu tizimdan foydalanish huquqiga ega emassiz.\n\n"
-    "Administrator bilan bog'laning."
+    "❌ Siz ushbu tizimdan foydalanish huquqiga ega emassiz. "
+    "Administrator bilan bog'laning.\n\n"
+    "❌ У вас нет доступа к этой системе. Свяжитесь с администратором."
 )
 INACTIVE_TEXT = (
-    "⏳ Profilingiz hali administrator tomonidan tasdiqlanmagan.\n\n"
-    "Iltimos, tasdiqlanishini kuting."
+    "⏳ Profilingiz hali administrator tomonidan tasdiqlanmagan. "
+    "Iltimos, kuting.\n\n"
+    "⏳ Ваш профиль ещё не подтверждён администратором. Пожалуйста, подождите."
 )
 
 

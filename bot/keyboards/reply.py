@@ -1,34 +1,39 @@
-"""Reply klaviaturalar va tugma matnlari."""
+"""Reply klaviaturalar — usta tiliga mos tugmalar."""
 
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
-BTN_NEW_ORDER = "➕ Yangi buyurtma"
-BTN_PENDING = "📋 Kutayotgan buyurtmalar"
-BTN_READY_LIST = "✅ Tayyor buyurtmalar"
-BTN_COMPLETE = "🛠 Buyurtmani tayyor qilish"
-BTN_SEARCH = "🔎 Buyurtmani topish"
-BTN_PROFILE = "👤 Profil"
+from bot.utils.i18n import btn, t
+
+# Admin panel tugmasi ikkala tilda bir xil
 BTN_ADMIN = "⚙️ Admin panel"
-BTN_CANCEL = "❌ Bekor qilish"
 
 
-def master_menu(is_admin: bool = False) -> ReplyKeyboardMarkup:
+def master_menu(lang: str = "uz", is_admin: bool = False) -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text=BTN_NEW_ORDER), KeyboardButton(text=BTN_COMPLETE)],
-        [KeyboardButton(text=BTN_PENDING), KeyboardButton(text=BTN_READY_LIST)],
-        [KeyboardButton(text=BTN_SEARCH), KeyboardButton(text=BTN_PROFILE)],
+        [
+            KeyboardButton(text=btn("new_order", lang)),
+            KeyboardButton(text=btn("complete", lang)),
+        ],
+        [
+            KeyboardButton(text=btn("pending", lang)),
+            KeyboardButton(text=btn("ready_list", lang)),
+        ],
+        [
+            KeyboardButton(text=btn("search", lang)),
+            KeyboardButton(text=btn("profile", lang)),
+        ],
     ]
     if is_admin:
         keyboard.append([KeyboardButton(text=BTN_ADMIN)])
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
         resize_keyboard=True,
-        input_field_placeholder="Amalni tanlang…",
+        input_field_placeholder=t("menu_placeholder", lang),
     )
 
 
-def cancel_kb() -> ReplyKeyboardMarkup:
+def cancel_kb(lang: str = "uz") -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=BTN_CANCEL)]],
+        keyboard=[[KeyboardButton(text=btn("cancel", lang))]],
         resize_keyboard=True,
     )
