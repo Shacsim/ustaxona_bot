@@ -45,6 +45,7 @@ class Settings:
     ready_topic_id: int | None = _int_or_none(os.getenv("READY_TOPIC_ID", ""))
     about_topic_id: int | None = _int_or_none(os.getenv("ABOUT_TOPIC_ID", ""))
     faq_topic_id: int | None = _int_or_none(os.getenv("FAQ_TOPIC_ID", ""))
+    elon_topic_id: int | None = _int_or_none(os.getenv("ELON_TOPIC_ID", ""))
 
     admin_ids: set[int] = field(
         default_factory=lambda: _parse_admin_ids(os.getenv("ADMIN_IDS", ""))

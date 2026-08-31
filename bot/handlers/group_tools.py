@@ -78,6 +78,7 @@ async def cmd_close_topics(message: Message, user: User | None, bot: Bot) -> Non
         "📋 Kutayotganlar": settings.pending_topic_id,
         "✅ Tayyorlar": settings.ready_topic_id,
         "🏢 Biz haqimizda": settings.about_topic_id,
+        "📢 E'lonlar": settings.elon_topic_id,
     }
     results = []
     for name, topic_id in topics.items():
