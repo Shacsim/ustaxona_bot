@@ -33,6 +33,14 @@ def master_menu(lang: str = "uz", is_admin: bool = False) -> ReplyKeyboardMarkup
     )
 
 
+def customer_menu(lang: str = "uz") -> ReplyKeyboardMarkup:
+    """Ro'yxatdan o'tmagan foydalanuvchi (mijoz) uchun menyu."""
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=btn("ask_question", lang))]],
+        resize_keyboard=True,
+    )
+
+
 def cancel_kb(lang: str = "uz") -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=btn("cancel", lang))]],

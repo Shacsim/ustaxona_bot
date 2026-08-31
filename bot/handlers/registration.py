@@ -12,13 +12,13 @@ from html import escape
 
 from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramAPIError
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.keyboards.inline import approve_master_kb, language_kb
-from bot.keyboards.reply import master_menu
+from bot.keyboards.reply import customer_menu, master_menu
 from bot.states import RegistrationStates
 from bot.utils.i18n import t
 from bot.utils.validators import valid_name
@@ -65,13 +65,28 @@ async def choose_language(
             await callback.message.answer(t("pending_approval", lang))
         return
 
-    # Yangi foydalanuvchi — ism so'raymiz
+    # Ro'yxatda yo'q foydalanuvchi — bu MIJOZ: anonim savol rejimi.
+    # (Ustalar /usta buyrug'i orqali ro'yxatdan o'tadi.)
     await state.update_data(language=lang)
-    await state.set_state(RegistrationStates.waiting_name)
     await callback.message.edit_text(t("lang_set", lang))
     await callback.message.answer(
-        t("reg_ask_name", lang), reply_markup=ReplyKeyboardRemove()
+        t("customer_welcome", lang), reply_markup=customer_menu(lang)
     )
+
+
+@router.message(Command("usta"))
+async def cmd_usta(
+    message: Message, state: FSMContext, user: User | None
+) -> None:
+    """Usta sifatida ro'yxatdan o'tish (mijozlarga e'lon qilinmaydi)."""
+    data = await state.get_data()
+    lang = data.get("language", "uz")
+    if user is not None:
+        await message.answer(t("reg_already", user.language))
+        return
+    await state.update_data(language=lang)
+    await state.set_state(RegistrationStates.waiting_name)
+    await message.answer(t("reg_ask_name", lang), reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(RegistrationStates.waiting_name, F.text)

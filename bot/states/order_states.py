@@ -23,3 +23,7 @@ class CompleteOrderStates(StatesGroup):
 
 class SearchStates(StatesGroup):
     waiting_order_number = State()
+
+
+class CustomerStates(StatesGroup):
+    waiting_question = State()

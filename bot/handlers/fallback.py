@@ -5,8 +5,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from bot.keyboards.reply import master_menu
-from bot.middlewares.auth import DENIED_TEXT, INACTIVE_TEXT
+from bot.keyboards.reply import customer_menu, master_menu
+from bot.middlewares.auth import INACTIVE_TEXT
 from bot.utils.i18n import t
 from database.models import User
 
@@ -27,7 +27,11 @@ async def unknown_message(
     message: Message, state: FSMContext, user: User | None
 ) -> None:
     if user is None:
-        await message.answer(DENIED_TEXT + "\n\n/start")
+        # Ro'yxatda yo'q — bu mijoz: savol berish menyusini ko'rsatamiz
+        lang = (await state.get_data()).get("language", "uz")
+        await message.answer(
+            t("customer_welcome", lang), reply_markup=customer_menu(lang)
+        )
         return
     lang = user.language
     if not user.is_active:

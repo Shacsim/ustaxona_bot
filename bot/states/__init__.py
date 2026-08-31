@@ -1,5 +1,6 @@
 from bot.states.order_states import (
     CompleteOrderStates,
+    CustomerStates,
     NewOrderStates,
     RegistrationStates,
     SearchStates,
@@ -7,6 +8,7 @@ from bot.states.order_states import (
 
 __all__ = [
     "CompleteOrderStates",
+    "CustomerStates",
     "NewOrderStates",
     "RegistrationStates",
     "SearchStates",

@@ -15,9 +15,10 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.services import group_publisher
+from bot.utils.i18n import t
 from config import settings
 from database.models import User
-from database.repositories import UserRepository
+from database.repositories import QuestionRepository, UserRepository
 
 logger = logging.getLogger(__name__)
 router = Router(name="group_tools")
@@ -110,8 +111,48 @@ async def cmd_post_about(message: Message, user: User | None, bot: Bot) -> None:
         await message.reply("❌ Yuborib bo'lmadi — loglarni tekshiring.")
 
 
+async def _relay_answer_to_asker(
+    message: Message, user: User | None, bot: Bot, session
+) -> None:
+    """Ustaning anonim savolga reply'ini so'rovchiga botda yetkazadi."""
+    reply = message.reply_to_message
+    if reply is None or reply.from_user is None or reply.from_user.id != bot.id:
+        return
+    # Faqat xodim (yoki anonim admin) javobini yetkazamiz
+    if not ((user is not None and user.is_active) or _is_anon_admin(message)):
+        return
+    answer_text = (message.text or message.caption or "").strip()
+    if not answer_text:
+        return
+    question = await QuestionRepository(session).get_by_group_message_id(
+        reply.message_id
+    )
+    if question is None:
+        return
+    short_q = question.text if len(question.text) <= 150 else question.text[:150] + "…"
+    try:
+        from html import escape as _esc
+
+        await bot.send_message(
+            question.asker_id,
+            t(
+                "answer_received",
+                question.language,
+                question=_esc(short_q),
+                answer=_esc(answer_text),
+            ),
+        )
+        logger.info("Answer relayed for question #%s", question.id)
+    except TelegramAPIError as e:
+        logger.warning(
+            "Javobni so'rovchiga yetkazib bo'lmadi (savol #%s): %s", question.id, e
+        )
+
+
 @router.message()
-async def guard_protected_topics(message: Message, user: User | None) -> None:
+async def guard_protected_topics(
+    message: Message, user: User | None, bot: Bot, session
+) -> None:
     """Himoyalangan topic'larda faqat xodimlar yozadi.
 
     Asosiy himoya Telegram guruh permissionlari orqali qilinadi (README).
@@ -120,8 +161,10 @@ async def guard_protected_topics(message: Message, user: User | None) -> None:
     """
     if settings.group_id is None or message.chat.id != settings.group_id:
         return
-    # Savol-javob bo'limi hammaga ochiq
+    # Savol-javob bo'limi hammaga ochiq; anonim savolga reply bo'lsa —
+    # javobni so'rovchiga yetkazamiz
     if settings.faq_topic_id is not None and message.message_thread_id == settings.faq_topic_id:
+        await _relay_answer_to_asker(message, user, bot, session)
         return
     # Xodimlar (faol usta/admin) va anonim adminlar yozishi mumkin
     if user is not None and user.is_active:

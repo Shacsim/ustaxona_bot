@@ -21,6 +21,7 @@ BUTTONS = {
     "cancel": {"uz": "❌ Bekor qilish", "ru": "❌ Отмена"},
     "confirm_accept": {"uz": "✅ Qabul qilindi", "ru": "✅ Принять"},
     "confirm_ready": {"uz": "✅ TAYYOR", "ru": "✅ ГОТОВО"},
+    "ask_question": {"uz": "❓ Savol berish", "ru": "❓ Задать вопрос"},
 }
 
 
@@ -365,6 +366,58 @@ TEXTS = {
     "period_week": {"uz": "Shu hafta", "ru": "Эта неделя"},
     "period_month": {"uz": "Shu oy", "ru": "Этот месяц"},
     "period_all": {"uz": "Jami (hozirgacha)", "ru": "Всего (за всё время)"},
+
+    # Mijoz rejimi — anonim savol
+    "customer_welcome": {
+        "uz": (
+            "🖥 <b>Kompyuter Servisi</b> botiga xush kelibsiz!\n\n"
+            "Savolingiz bo'lsa — «❓ Savol berish» tugmasini bosing.\n"
+            "Savolingiz guruhda <b>anonim</b> e'lon qilinadi (ismingiz "
+            "ko'rinmaydi), ustaning javobi esa shu yerga — botga keladi. 🔔"
+        ),
+        "ru": (
+            "🖥 Добро пожаловать в бот <b>Компьютерного Сервиса</b>!\n\n"
+            "Есть вопрос — нажмите «❓ Задать вопрос».\n"
+            "Ваш вопрос будет опубликован в группе <b>анонимно</b> (ваше имя "
+            "не видно), а ответ мастера придёт сюда — в бот. 🔔"
+        ),
+    },
+    "ask_question_prompt": {
+        "uz": "❓ Savolingizni yozing:",
+        "ru": "❓ Напишите ваш вопрос:",
+    },
+    "question_invalid": {
+        "uz": "❌ Savol juda qisqa yoki juda uzun (5–1000 belgi). Qayta yozing:",
+        "ru": "❌ Вопрос слишком короткий или длинный (5–1000 символов). Напишите ещё раз:",
+    },
+    "question_sent": {
+        "uz": (
+            "✅ Savolingiz yuborildi!\n\n"
+            "U guruhda anonim e'lon qilindi. Usta javob bergach, "
+            "javob shu yerga keladi. 🔔"
+        ),
+        "ru": (
+            "✅ Ваш вопрос отправлен!\n\n"
+            "Он опубликован в группе анонимно. Как только мастер ответит, "
+            "ответ придёт сюда. 🔔"
+        ),
+    },
+    "question_send_failed": {
+        "uz": "⚠️ Savolni yuborib bo'lmadi. Birozdan keyin qayta urinib ko'ring.",
+        "ru": "⚠️ Не удалось отправить вопрос. Попробуйте немного позже.",
+    },
+    "answer_received": {
+        "uz": (
+            "💬 <b>Savolingizga javob keldi!</b>\n\n"
+            "❓ Savolingiz: <i>{question}</i>\n\n"
+            "👨‍🔧 Javob: {answer}"
+        ),
+        "ru": (
+            "💬 <b>Пришёл ответ на ваш вопрос!</b>\n\n"
+            "❓ Ваш вопрос: <i>{question}</i>\n\n"
+            "👨‍🔧 Ответ: {answer}"
+        ),
+    },
 }
 
 

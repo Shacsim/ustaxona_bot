@@ -21,6 +21,7 @@ from aiogram.types import BotCommand
 from bot.handlers import (
     admin,
     complete_order,
+    customer,
     errors,
     fallback,
     group_tools,
@@ -75,6 +76,7 @@ async def main() -> None:
     dp.include_router(errors.router)
     dp.include_router(group_tools.router)
     dp.include_router(registration.router)
+    dp.include_router(customer.router)
     dp.include_router(menu.router)
     dp.include_router(new_order.router)
     dp.include_router(complete_order.router)
