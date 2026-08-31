@@ -110,15 +110,54 @@ async def cmd_post_about(message: Message, user: User | None, bot: Bot) -> None:
         await message.reply("❌ Yuborib bo'lmadi — loglarni tekshiring.")
 
 
+# Guruhda ko'rinmasligi kerak bo'lgan servis xabarlari: a'zo kirdi/chiqdi,
+# pin, sozlama/topic o'zgarishlari va h.k. Adminlar bu amallarni Telegramning
+# «Recent Actions» jurnalida baribir ko'radi.
+_SERVICE_ATTRS = (
+    "new_chat_members",
+    "left_chat_member",
+    "pinned_message",
+    "new_chat_title",
+    "new_chat_photo",
+    "delete_chat_photo",
+    "forum_topic_created",
+    "forum_topic_edited",
+    "forum_topic_closed",
+    "forum_topic_reopened",
+    "general_forum_topic_hidden",
+    "general_forum_topic_unhidden",
+    "video_chat_scheduled",
+    "video_chat_started",
+    "video_chat_ended",
+    "video_chat_participants_invited",
+    "message_auto_delete_timer_changed",
+)
+
+
+def _is_service_message(message: Message) -> bool:
+    return any(getattr(message, attr, None) is not None for attr in _SERVICE_ATTRS)
+
+
 @router.message()
 async def guard_protected_topics(message: Message, user: User | None) -> None:
     """Himoyalangan topic'larda faqat xodimlar yozadi.
 
     Asosiy himoya Telegram guruh permissionlari orqali qilinadi (README).
     Bu qo'riqchi qo'shimcha qatlam: agar permission noto'g'ri sozlangan
-    bo'lsa ham, begona xabarlar o'chiriladi.
+    bo'lsa ham, begona xabarlar o'chiriladi. Servis xabarlari (kirdi/chiqdi,
+    pin, sozlama o'zgarishi) esa barcha topic'larda o'chiriladi.
     """
     if settings.group_id is None or message.chat.id != settings.group_id:
+        return
+    # Servis xabarlarini darhol o'chiramiz — guruh toza turadi
+    if _is_service_message(message):
+        try:
+            await message.delete()
+            logger.info(
+                "Deleted service message (type=%s)", message.content_type
+            )
+        except TelegramAPIError as e:
+            logger.warning("Servis xabarni o'chirib bo'lmadi: %s", e)
         return
     # Savol-javob bo'limi hammaga ochiq
     if settings.faq_topic_id is not None and message.message_thread_id == settings.faq_topic_id:
