@@ -16,6 +16,23 @@ from database.models import Order
 logger = logging.getLogger(__name__)
 
 
+async def ensure_topic_closed(bot: Bot, topic_id: int | None) -> None:
+    """Himoyalangan topic yopiqligiga ishonch hosil qiladi.
+
+    Telegram mijoz-ilovalari admin yozganda yopiq topic'ni qayta ochib
+    yuborishi mumkin — shuning uchun har e'londan keyin qayta yopamiz.
+    Allaqachon yopiq bo'lsa (TOPIC_NOT_MODIFIED) — jimgina o'tamiz.
+    """
+    if settings.group_id is None or topic_id is None:
+        return
+    try:
+        await bot.close_forum_topic(
+            chat_id=settings.group_id, message_thread_id=topic_id
+        )
+    except TelegramAPIError:
+        pass
+
+
 async def _send_to_topic(bot: Bot, topic_id: int | None, text: str) -> int | None:
     """Xabar yuboradi, muvaffaqiyatda message_id qaytaradi."""
     if settings.group_id is None:
@@ -27,6 +44,7 @@ async def _send_to_topic(bot: Bot, topic_id: int | None, text: str) -> int | Non
             message_thread_id=topic_id,
             text=text,
         )
+        await ensure_topic_closed(bot, topic_id)
         return message.message_id
     except TelegramAPIError as e:
         logger.error("Guruhga xabar yuborishda xato (topic=%s): %s", topic_id, e)

@@ -139,7 +139,9 @@ def _is_service_message(message: Message) -> bool:
 
 
 @router.message()
-async def guard_protected_topics(message: Message, user: User | None) -> None:
+async def guard_protected_topics(
+    message: Message, user: User | None, bot: Bot
+) -> None:
     """Himoyalangan topic'larda faqat xodimlar yozadi.
 
     Asosiy himoya Telegram guruh permissionlari orqali qilinadi (README).
@@ -158,6 +160,22 @@ async def guard_protected_topics(message: Message, user: User | None) -> None:
             )
         except TelegramAPIError as e:
             logger.warning("Servis xabarni o'chirib bo'lmadi: %s", e)
+        # Himoyalangan topic qayta ochilib qolsa — darhol qaytadan yopamiz
+        if (
+            message.forum_topic_reopened is not None
+            and message.message_thread_id is not None
+            and message.message_thread_id != settings.faq_topic_id
+        ):
+            try:
+                await bot.close_forum_topic(
+                    chat_id=message.chat.id,
+                    message_thread_id=message.message_thread_id,
+                )
+                logger.info(
+                    "Re-closed reopened topic %s", message.message_thread_id
+                )
+            except TelegramAPIError as e:
+                logger.warning("Topic'ni qayta yopib bo'lmadi: %s", e)
         return
     # Savol-javob bo'limi hammaga ochiq
     if settings.faq_topic_id is not None and message.message_thread_id == settings.faq_topic_id:
