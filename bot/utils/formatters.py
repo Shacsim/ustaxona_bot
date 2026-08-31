@@ -39,41 +39,45 @@ STATUS_LABELS = {
 
 
 def pending_group_text(order: Order) -> str:
-    """«Kutayotgan buyurtmalar» topic'iga yuboriladigan xabar."""
+    """«Kutayotgan buyurtmalar» topic'iga yuboriladigan xabar (3 tilda)."""
     master = escape(order.creator.full_name)
     return (
-        "📥 <b>BUYURTMA QABUL QILINDI</b>\n\n"
-        f"🔢 Buyurtma raqami: <b>#{order.order_number}</b>\n\n"
-        "Assalomu alaykum!\n\n"
-        "Buyurtmangiz ustalarimiz tomonidan qabul qilindi.\n\n"
-        "🔧 Hozirda qurilmangiz diagnostika va ta'mirlash jarayonida.\n\n"
-        "⏳ Iltimos, biroz sabr qiling.\n\n"
-        "Sizning ishonchingiz biz uchun juda muhim.\n"
-        "Bizni tanlaganingizdan xursandmiz! ❤️\n\n"
-        f"👨‍🔧 Mas'ul usta: <b>{master}</b>\n"
-        f"🕐 Qabul qilingan vaqt: {fmt_dt(order.created_at)}"
+        f"📥 <b>BUYURTMA QABUL QILINDI — #{order.order_number}</b>\n\n"
+        "🇺🇿 Assalomu alaykum! Buyurtmangiz ustalarimiz tomonidan qabul qilindi.\n"
+        "🔧 Qurilmangiz diagnostika va ta'mirlash jarayonida.\n"
+        "⏳ Iltimos, biroz sabr qiling. Bizni tanlaganingizdan xursandmiz! ❤️\n\n"
+        "🇷🇺 Здравствуйте! Ваш заказ принят нашими мастерами.\n"
+        "🔧 Ваше устройство находится на диагностике и в ремонте.\n"
+        "⏳ Пожалуйста, немного подождите. Спасибо, что выбрали нас! ❤️\n\n"
+        "🇬🇧 Hello! Your order has been received by our technicians.\n"
+        "🔧 Your device is under diagnostics and repair.\n"
+        "⏳ Please be patient. Thank you for choosing us! ❤️\n\n"
+        f"👨‍🔧 Mas'ul usta / Мастер / Technician: <b>{master}</b>\n"
+        f"🕐 {fmt_dt(order.created_at)}"
     )
 
 
 def ready_group_text(order: Order) -> str:
-    """«Tayyor buyurtmalar» topic'iga yuboriladigan xabar."""
+    """«Tayyor buyurtmalar» topic'iga yuboriladigan xabar (3 tilda)."""
     master = escape(
         order.completer.full_name if order.completer else order.creator.full_name
     )
     return (
         "━━━━━━━━━━━━━━━━━━\n"
-        "✅ <b>BUYURTMA TAYYOR</b>\n"
+        f"✅ <b>#{order.order_number} — TAYYOR / ГОТОВ / READY</b>\n"
         "━━━━━━━━━━━━━━━━━━\n\n"
-        f"🔢 Buyurtma raqami: <b>#{order.order_number}</b>\n\n"
-        "🎉 Buyurtmangiz tayyor!\n\n"
-        "🔧 <b>Bajarilgan ishlar:</b>\n\n"
+        "🇺🇿 🎉 Buyurtmangiz tayyor! Olib ketishingiz mumkin.\n"
+        "🇷🇺 🎉 Ваш заказ готов! Можете забирать.\n"
+        "🇬🇧 🎉 Your order is ready for pickup!\n\n"
+        "🔧 <b>Bajarilgan ishlar / Выполненные работы / Work done:</b>\n"
         f"{fmt_work_done(order.work_done or '')}\n\n"
-        f"💰 <b>Xizmat haqqi:</b>\n{fmt_price(order.price)}\n\n"
-        f"👨‍🔧 <b>Mas'ul usta:</b>\n{master}\n\n"
-        f"🕐 <b>Tayyor bo'lgan vaqt:</b>\n{fmt_dt(order.completed_at)}\n\n"
-        "📌 Buyurtmangizni olib ketishingiz mumkin.\n\n"
-        "Bizni tanlaganingiz uchun tashakkur!\n"
-        "Sizning ishonchingiz biz uchun juda muhim. ❤️\n"
+        "💰 <b>Xizmat haqqi / Стоимость / Price:</b>\n"
+        f"{fmt_price(order.price)}\n\n"
+        f"👨‍🔧 Usta / Мастер / Technician: <b>{master}</b>\n"
+        f"🕐 {fmt_dt(order.completed_at)}\n\n"
+        "Bizni tanlaganingiz uchun tashakkur! ❤️\n"
+        "Спасибо, что выбрали нас! ❤️\n"
+        "Thank you for choosing us! ❤️\n"
         "━━━━━━━━━━━━━━━━━━"
     )
 
@@ -81,9 +85,10 @@ def ready_group_text(order: Order) -> str:
 def pending_done_note(order: Order) -> str:
     """Buyurtma tayyor bo'lganda eski «kutayotgan» xabarga yangilangan matn."""
     return (
-        f"✅ <b>BUYURTMA #{order.order_number} TAYYOR BO'LDI</b>\n\n"
-        "Ushbu buyurtma yakunlandi.\n"
-        "Batafsil ma'lumot «✅ TAYYOR BUYURTMALAR» bo'limida.\n\n"
+        f"✅ <b>#{order.order_number} — TAYYOR / ГОТОВ / READY</b>\n\n"
+        "🇺🇿 Buyurtma yakunlandi — batafsil «✅ TAYYOR BUYURTMALAR» bo'limida.\n"
+        "🇷🇺 Заказ завершён — подробности в разделе «✅ TAYYOR BUYURTMALAR».\n"
+        "🇬🇧 Order completed — see the «✅ TAYYOR BUYURTMALAR» topic.\n\n"
         f"🕐 {fmt_dt(order.completed_at)}"
     )
 
