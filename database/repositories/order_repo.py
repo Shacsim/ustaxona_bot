@@ -72,11 +72,20 @@ class OrderRepository:
         await self.session.refresh(order)
         return order
 
-    async def list_by_status(self, status: OrderStatus, limit: int = 15) -> list[Order]:
+    async def list_by_status(
+        self,
+        status: OrderStatus,
+        limit: int = 15,
+        oldest_first: bool = False,
+    ) -> list[Order]:
+        # oldest_first=True — navbat tartibi: eng uzoq kutayotgani birinchi (FIFO).
+        order_col = (
+            Order.created_at.asc() if oldest_first else Order.order_number.desc()
+        )
         result = await self.session.execute(
             select(Order)
             .where(Order.status == status)
-            .order_by(Order.order_number.desc())
+            .order_by(order_col)
             .limit(limit)
         )
         return list(result.scalars().all())

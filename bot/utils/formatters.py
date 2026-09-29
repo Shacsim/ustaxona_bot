@@ -87,6 +87,93 @@ CARD_LABELS = {
 }
 
 
+PENDING_LABELS = {
+    "uz": {
+        "header": "📋 <b>KUTAYOTGAN BUYURTMALAR</b> — {n} ta\n"
+        "<i>eng uzoq kutayotgani birinchi</i>",
+        "created": "📅 Qabul qilingan",
+        "customer": "👤 Mijoz",
+        "phone": "📞 Telefon",
+        "task": "🔧 Nima qilish kerak",
+        "master": "👨‍🔧 Qabul qilgan usta",
+        "today": "bugun",
+        "yesterday": "kecha",
+        "days_ago": "{d} kun oldin",
+        "none": "—",
+    },
+    "ru": {
+        "header": "📋 <b>ЗАКАЗЫ В ОЖИДАНИИ</b> — {n}\n"
+        "<i>дольше всех ожидающий — первым</i>",
+        "created": "📅 Принят",
+        "customer": "👤 Клиент",
+        "phone": "📞 Телефон",
+        "task": "🔧 Что нужно сделать",
+        "master": "👨‍🔧 Принял мастер",
+        "today": "сегодня",
+        "yesterday": "вчера",
+        "days_ago": "{d} дн. назад",
+        "none": "—",
+    },
+}
+
+
+def _relative_days(dt: datetime | None, lang: str) -> str:
+    """«bugun / kecha / N kun oldin» — buyurtma qachon olingani (Toshkent vaqti)."""
+    labels = PENDING_LABELS.get(lang, PENDING_LABELS["uz"])
+    if dt is None:
+        return labels["none"]
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    days = (datetime.now(TZ).date() - dt.astimezone(TZ).date()).days
+    if days <= 0:
+        return labels["today"]
+    if days == 1:
+        return labels["yesterday"]
+    return labels["days_ago"].format(d=days)
+
+
+def pending_list_text(orders: list[Order], lang: str) -> list[str]:
+    """Kutayotgan buyurtmalarni tartibli kartochka ko'rinishida beradi.
+
+    Har biri: raqam, qachon olingani (aniq sana + nisbiy), mijoz ismi,
+    telefon (tap-to-copy), nima qilish kerak, qabul qilgan usta.
+    Telegram 4096 belgili chegarasi uchun bir nechta xabarga bo'linadi.
+    """
+    labels = PENDING_LABELS.get(lang, PENDING_LABELS["uz"])
+    header = labels["header"].format(n=len(orders))
+    cards: list[str] = []
+    for o in orders:
+        name = escape(o.customer_name) if o.customer_name else labels["none"]
+        phone = (
+            f"<code>{escape(o.customer_phone)}</code>"
+            if o.customer_phone
+            else labels["none"]
+        )
+        task = escape(o.description) if o.description else labels["none"]
+        master = escape(o.creator.full_name) if o.creator else labels["none"]
+        cards.append(
+            "━━━━━━━━━━━━━━━\n"
+            f"⏳ <b>#{o.order_number}</b>  ·  🕒 {_relative_days(o.created_at, lang)}\n"
+            f"{labels['created']}: {fmt_dt(o.created_at)}\n"
+            f"{labels['customer']}: {name}\n"
+            f"{labels['phone']}: {phone}\n"
+            f"{labels['task']}: {task}\n"
+            f"{labels['master']}: {master}"
+        )
+
+    # Xabarlarni ~3800 belgidan oshirmay bo'laklarga yig'amiz.
+    messages: list[str] = []
+    current = header
+    for card in cards:
+        if len(current) + len(card) + 2 > 3800:
+            messages.append(current)
+            current = card
+        else:
+            current = f"{current}\n{card}"
+    messages.append(current)
+    return messages
+
+
 def pending_group_text(order: Order) -> str:
     """«Kutayotgan buyurtmalar» topic'iga yuboriladigan xabar (3 tilda).
 

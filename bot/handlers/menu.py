@@ -9,7 +9,7 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.keyboards.reply import master_menu
-from bot.utils.formatters import fmt_dt, fmt_price, period_start
+from bot.utils.formatters import fmt_dt, fmt_price, pending_list_text, period_start
 from bot.utils.i18n import btn_variants, t
 from database.models import OrderStatus, User
 from database.repositories import OrderRepository
@@ -30,18 +30,14 @@ async def cancel_anywhere(message: Message, state: FSMContext, user: User) -> No
 @router.message(StateFilter(None), F.text.in_(btn_variants("pending")))
 async def list_pending(message: Message, session: AsyncSession, user: User) -> None:
     lang = user.language
-    orders = await OrderRepository(session).list_by_status(OrderStatus.PENDING)
+    orders = await OrderRepository(session).list_by_status(
+        OrderStatus.PENDING, limit=50, oldest_first=True
+    )
     if not orders:
         await message.answer(t("none_pending", lang))
         return
-    lines = [t("pending_header", lang)]
-    for o in orders:
-        customer = f" — {escape(o.customer_name)}" if o.customer_name else ""
-        lines.append(
-            f"⏳ <b>#{o.order_number}</b>{customer} · {escape(o.creator.full_name)} "
-            f"({fmt_dt(o.created_at)})"
-        )
-    await message.answer("\n".join(lines))
+    for chunk in pending_list_text(orders, lang):
+        await message.answer(chunk)
 
 
 @router.message(StateFilter(None), F.text.in_(btn_variants("ready_list")))

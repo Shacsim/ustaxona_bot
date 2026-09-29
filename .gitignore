@@ -19,3 +19,7 @@ venv/
 *.log
 *.db
 *.sqlite3
+
+# DB zaxira nusxalari (repoga tushmasin)
+backups/*.sql.gz
+backups/*.tmp
