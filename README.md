@@ -213,14 +213,27 @@ Bot `.env` dagi telefon, manzil, ish vaqti va lokatsiyani
 2. `ADMIN_IDS` dagi foydalanuvchi darhol faol admin bo'ladi.
 3. Boshqa ustalarga admin tasdig'i kerak — adminlarga tugmali xabar boradi.
 
+### Til
+
+Bot 3 tilda ishlaydi: 🇺🇿 o'zbek, 🇷🇺 rus, 🇬🇧 ingliz. `/start` har safar tilni
+tanlashni taklif qiladi; admin panel ham tanlangan tilda. Guruhga chiqadigan mijoz
+e'lonlari bitta xabarda 3 tilda.
+
 ### Buyurtma qabul qilish
 
 ```text
-➕ Yangi buyurtma → raqam (bot keyingisini taklif qiladi) → ✅ Qabul qilindi
-→ guruhdagi 📋 KUTAYOTGAN BUYURTMALAR ga chiroyli e'lon (usta ismi bilan)
+➕ Yangi buyurtma → 📞 mijoz telefon raqami → 👤 ismi → 🔧 nima qilish kerak
+→ ✅ Qabul qilindi → guruhdagi 📋 KUTAYOTGAN BUYURTMALAR ga e'lon
 ```
 
-Buyurtma raqamini mijozga bering — u guruhda o'z raqamini kuzatadi.
+Telefon raqami uch yo'l bilan kiritiladi:
+
+* **📱 Raqamni terish** — Telegram Mini App ochiladi, telefonning sonli
+  klaviaturasi chiqadi (`webapp/tel.html`, manzil `.env` dagi `PHONE_WEBAPP_URL`);
+* oddiy yozish: `901234567`, `90 123 45 67`, `+998 90 123 45 67`;
+* kontakt ulashish (📎 → Kontakt) — kontaktdagi ism ham taklif qilinadi.
+
+Raqam bazada bo'lsa, mijozning oldingi ismi tugma sifatida taklif qilinadi.
 
 ### Buyurtmani tayyor qilish
 
@@ -230,13 +243,53 @@ Buyurtma raqamini mijozga bering — u guruhda o'z raqamini kuzatadi.
 → eski «kutayotgan» xabar avtomatik «tayyor bo'ldi» ga yangilanadi
 ```
 
+### 📦 Omborim (har bir ustaning o'z ombori)
+
+```text
+📥 Sotib oldim → mahsulot (yoki ➕ yangi nom) → soni → bir dona narxi → ✅
+📤 Sotdim      → qoldig'i bor mahsulot → soni → sotuv narxi → ✅ (taxminiy foyda)
+📦 Qoldiq · 🧾 Sotib olinganlar · 💸 Sotilganlar — sana va vaqti bilan
+📄 PDF hisobot — bugun / hafta / oy / jami
+↩️ Oxirgi yozuvni bekor qilish — xato kiritilganini tuzatish
+```
+
+Tannarx o'rtacha narx bo'yicha yuritiladi; foyda = (sotuv narxi − tannarx) × soni.
+
+### Hisobotlar (PDF)
+
+* **Har kuni `REPORT_TIME` (19:30)** da har bir faol ustaga kunlik hisobot: tayyorlangan
+  buyurtmalar va daromad, ombordan sotuv va foyda, sotib olinganlar, ombordagi qoldiq.
+* **📋 Kutayotgan** ro'yxati ostida — 📄 PDF hisobot.
+* **✅ Tayyor** ro'yxati ostida — davr bo'yicha PDF (bugun/hafta/oy/jami).
+* **💰 Daromadim** ostida — usta hisoboti PDF.
+
+### Zaxira nusxa
+
+Har kuni `BACKUP_TIME` (23:30) da bot `pg_dump` qilib, `.sql.gz` faylni adminlarga
+Telegram orqali yuboradi — server butunlay yo'qolsa ham nusxa chatda qoladi.
+Qo'lda: Admin panel → 💾 Zaxira nusxa (hozir). Tiklash:
+
+```bash
+gunzip -c ustaxona_YYYYMMDD_HHMM.sql.gz | docker compose exec -T db psql -U ustaxona -d ustaxona
+```
+
 ### Admin panel
 
 ```text
 ⚙️ Admin panel → 👨‍🔧 Ustalar (faollashtirish/bloklash/o'chirish)
-              → 📊 Statistika (jami/kutayotgan/tayyor/tushum + ustalar kesimida)
-              → 📦 Buyurtmalar
+              → 📊 Statistika · 💰 Daromadlar · 📦 Buyurtmalar
+              → 📢 E'lon yuborish → ustalarga (botda) yoki Ustaxona guruhiga (E'lonlar topic)
+                  matn, rasm, video yoki fayl; avval ko'rib chiqib tasdiqlanadi
+              → 💾 Zaxira nusxa (hozir)
               → ⚙️ Sozlamalar
+```
+
+### Deploy
+
+```bash
+./deploy/deploy.sh   # zaxira → rsync → Mini App → docker compose up --build
+# yangilanish haqida a'zolarga xabar (har biriga o'z tilida):
+ssh shacsim 'cd /home/admin/ustaxona_bot && sudo docker compose exec bot python -m scripts.announce_update --send'
 ```
 
 ---

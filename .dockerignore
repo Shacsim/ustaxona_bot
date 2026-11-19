@@ -1,0 +1,8 @@
+.env
+*.sql*
+backups
+.git
+.venv
+venv
+__pycache__
+*.pyc

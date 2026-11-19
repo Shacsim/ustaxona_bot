@@ -18,6 +18,26 @@ def fmt_dt(dt: datetime | None) -> str:
     return dt.astimezone(TZ).strftime("%d.%m.%Y %H:%M")
 
 
+def now_local() -> datetime:
+    return datetime.now(TZ)
+
+
+def to_local(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(TZ)
+
+
+def fmt_date(dt: datetime | None) -> str:
+    return "—" if dt is None else to_local(dt).strftime("%d.%m.%Y")
+
+
+def wait_days(dt: datetime | None) -> int:
+    if dt is None:
+        return 0
+    return max(0, (now_local().date() - to_local(dt).date()).days)
+
+
 def period_start(period: str) -> datetime | None:
     """Davr boshini (Toshkent vaqti) qaytaradi: today/week/month; all → None."""
     now = datetime.now(TZ)
@@ -31,10 +51,13 @@ def period_start(period: str) -> datetime | None:
     return None
 
 
-def fmt_price(price: int | None) -> str:
+CURRENCY = {"uz": "so'm", "ru": "сум", "en": "UZS"}
+
+
+def fmt_price(price: int | None, lang: str = "uz") -> str:
     if price is None:
         return "—"
-    return f"{price:,}".replace(",", " ") + " so'm"
+    return f"{price:,}".replace(",", " ") + " " + CURRENCY.get(lang, CURRENCY["uz"])
 
 
 def fmt_work_done(work_done: str) -> str:
@@ -54,6 +77,11 @@ STATUS_LABELS = {
         OrderStatus.PENDING: "⏳ В ОЖИДАНИИ",
         OrderStatus.READY: "✅ ГОТОВ",
         OrderStatus.CANCELLED: "❌ ОТМЕНЁН",
+    },
+    "en": {
+        OrderStatus.PENDING: "⏳ PENDING",
+        OrderStatus.READY: "✅ READY",
+        OrderStatus.CANCELLED: "❌ CANCELLED",
     },
 }
 
@@ -84,6 +112,19 @@ CARD_LABELS = {
         "created": "📅 Принят",
         "completed": "📅 Готов",
     },
+    "en": {
+        "title": "📋 <b>ORDER #{n}</b>",
+        "status": "Status",
+        "customer": "👤 Customer",
+        "phone": "📞 Phone",
+        "task": "🔧 Task",
+        "created_by": "👨‍🔧 Accepted by",
+        "completed_by": "👨‍🔧 Completed by",
+        "work": "🔧 <b>Work done:</b>",
+        "price": "💰 Price",
+        "created": "📅 Accepted",
+        "completed": "📅 Completed",
+    },
 }
 
 
@@ -112,6 +153,19 @@ PENDING_LABELS = {
         "today": "сегодня",
         "yesterday": "вчера",
         "days_ago": "{d} дн. назад",
+        "none": "—",
+    },
+    "en": {
+        "header": "📋 <b>PENDING ORDERS</b> — {n}\n"
+        "<i>longest waiting first</i>",
+        "created": "📅 Accepted",
+        "customer": "👤 Customer",
+        "phone": "📞 Phone",
+        "task": "🔧 What to do",
+        "master": "👨‍🔧 Accepted by",
+        "today": "today",
+        "yesterday": "yesterday",
+        "days_ago": "{d} days ago",
         "none": "—",
     },
 }
@@ -271,7 +325,7 @@ def order_card(order: Order, lang: str = "uz") -> str:
     if order.work_done:
         lines += ["", lbl["work"], fmt_work_done(order.work_done)]
     if order.price:
-        lines += ["", f"{lbl['price']}: <b>{fmt_price(order.price)}</b>"]
+        lines += ["", f"{lbl['price']}: <b>{fmt_price(order.price, lang)}</b>"]
     lines += ["", f"{lbl['created']}: {fmt_dt(order.created_at)}"]
     if order.completed_at:
         lines.append(f"{lbl['completed']}: {fmt_dt(order.completed_at)}")

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Telefon raqami</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-bg-color, #ffffff);
+    --text: var(--tg-theme-text-color, #111827);
+    --hint: var(--tg-theme-hint-color, #6b7280);
+    --accent: var(--tg-theme-button-color, #2563eb);
+    --accent-text: var(--tg-theme-button-text-color, #ffffff);
+    --field: var(--tg-theme-secondary-bg-color, #f3f4f6);
+    --error: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 28px 16px 24px; min-height: 100vh;
+  }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  p.hint { margin: 0 0 22px; color: var(--hint); font-size: 14px; }
+  .field {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--field); border-radius: 14px; padding: 4px 16px;
+    border: 2px solid transparent; transition: border-color .15s;
+  }
+  .field:focus-within { border-color: var(--accent); }
+  .field.bad { border-color: var(--error); }
+  .flag { font-size: 24px; }
+  input {
+    flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text);
+    font-size: 26px; font-weight: 600; letter-spacing: .5px; padding: 14px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .msg { min-height: 20px; margin: 8px 4px 0; font-size: 13px; color: var(--hint); }
+  .msg.bad { color: var(--error); }
+  button {
+    display: none; width: 100%; margin-top: 18px; border: 0; border-radius: 12px;
+    padding: 15px; font-size: 16px; font-weight: 600;
+    background: var(--accent); color: var(--accent-text);
+  }
+  body.no-tg button { display: block; }
+</style>
+</head>
+<body>
+  <h1 id="title">📞 Mijoz telefon raqami</h1>
+  <p class="hint" id="hint">Raqamni kiriting va «Davom etish» tugmasini bosing.</p>
+  <label class="field" id="field">
+    <span class="flag">📱</span>
+    <input id="phone" type="tel" inputmode="tel" autocomplete="off" value="+998 " autofocus>
+  </label>
+  <div class="msg" id="msg"></div>
+  <button id="send" type="button">Davom etish</button>
+
+<script>
+(function () {
+  var T = {
+    uz: { title: "📞 Mijoz telefon raqami", hint: "Raqamni kiriting va «Davom etish» tugmasini bosing.",
+          send: "Davom etish", bad: "Raqam to'liq emas", ok: "To'g'ri ✓" },
+    ru: { title: "📞 Телефон клиента", hint: "Введите номер и нажмите «Продолжить».",
+          send: "Продолжить", bad: "Номер неполный", ok: "Верно ✓" },
+    en: { title: "📞 Customer phone", hint: "Enter the number and tap «Continue».",
+          send: "Continue", bad: "The number is incomplete", ok: "Looks good ✓" }
+  };
+  var lang = (new URLSearchParams(location.search).get("lang") || "uz").slice(0, 2);
+  var L = T[lang] || T.uz;
+  document.documentElement.lang = lang;
+  document.getElementById("title").textContent = L.title;
+  document.getElementById("hint").textContent = L.hint;
+  document.getElementById("send").textContent = L.send;
+
+  var tg = window.Telegram && window.Telegram.WebApp;
+  var inTelegram = !!(tg && tg.initData !== undefined && tg.platform && tg.platform !== "unknown");
+  if (!inTelegram) document.body.classList.add("no-tg");
+
+  var input = document.getElementById("phone");
+  var field = document.getElementById("field");
+  var msg = document.getElementById("msg");
+
+  function digits(v) { return v.replace(/\D/g, ""); }
+
+  // +998 90 123 45 67 ko'rinishida formatlash (boshqa davlatlar: +<raqamlar>)
+  function format(v) {
+    var d = digits(v);
+    if (!d) return "+998 ";
+    if (d.indexOf("998") !== 0) return "+" + d.slice(0, 15);
+    var r = d.slice(3, 12), out = "+998";
+    if (r.length) out += " " + r.slice(0, 2);
+    if (r.length > 2) out += " " + r.slice(2, 5);
+    if (r.length > 5) out += " " + r.slice(5, 7);
+    if (r.length > 7) out += " " + r.slice(7, 9);
+    return out;
+  }
+
+  // 9 ta raqam (+998 siz yozilgan mahalliy raqam) ham qabul qilinadi
+  function normalized() {
+    var d = digits(input.value);
+    if (d.length === 9) d = "998" + d;
+    return d;
+  }
+
+  function valid() {
+    var d = normalized();
+    if (d.indexOf("998") === 0) return d.length === 12;
+    return d.length >= 7 && d.length <= 15;
+  }
+
+  function refresh() {
+    var ok = valid();
+    field.classList.toggle("bad", false);
+    msg.className = "msg";
+    msg.textContent = ok ? L.ok : "";
+    if (tg && tg.MainButton) {
+      if (ok) tg.MainButton.enable(); else tg.MainButton.disable();
+    }
+  }
+
+  input.addEventListener("input", function () {
+    var end = input.selectionStart === input.value.length;
+    input.value = format(input.value);
+    if (end) input.setSelectionRange(input.value.length, input.value.length);
+    refresh();
+  });
+
+  function submit() {
+    if (!valid()) {
+      field.classList.add("bad");
+      msg.className = "msg bad";
+      msg.textContent = L.bad;
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
+      input.focus();
+      return;
+    }
+    var phone = "+" + normalized();
+    if (inTelegram) {
+      tg.sendData(JSON.stringify({ phone: phone }));
+    } else {
+      msg.textContent = phone;
+    }
+  }
+
+  document.getElementById("send").addEventListener("click", submit);
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+  document.body.addEventListener("click", function (e) { if (e.target === document.body) input.focus(); });
+
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    if (inTelegram) {
+      tg.MainButton.setText(L.send);
+      tg.MainButton.show();
+      tg.MainButton.disable();
+      tg.MainButton.onClick(submit);
+    }
+  }
+  refresh();
+  setTimeout(function () {
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }, 250);
+})();
+</script>
+</body>
+</html>

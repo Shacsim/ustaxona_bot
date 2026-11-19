@@ -87,7 +87,7 @@ async def process_price(message: Message, state: FSMContext, user: User) -> None
             lang,
             n=data["order_number"],
             work=fmt_work_done(data["work_done"]),
-            price=fmt_price(price),
+            price=fmt_price(price, lang),
         ),
         reply_markup=confirm_complete_kb(lang),
     )

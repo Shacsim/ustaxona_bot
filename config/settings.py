@@ -23,6 +23,18 @@ def _int_or_none(value: str) -> int | None:
         return None
 
 
+def _parse_hhmm(raw: str, default: tuple[int, int]) -> tuple[int, int]:
+    """'19:30' → (19, 30); noto'g'ri bo'lsa default."""
+    try:
+        hh, mm = raw.strip().split(":")
+        h, m = int(hh), int(mm)
+        if 0 <= h < 24 and 0 <= m < 60:
+            return h, m
+    except ValueError:
+        pass
+    return default
+
+
 def _parse_admin_ids(raw: str) -> set[int]:
     ids: set[int] = set()
     for part in raw.replace(";", ",").split(","):
@@ -57,6 +69,14 @@ class Settings:
     workshop_working_hours: str = os.getenv("WORKSHOP_WORKING_HOURS", "").strip()
     workshop_lat: str = os.getenv("WORKSHOP_LAT", "").strip()
     workshop_lon: str = os.getenv("WORKSHOP_LON", "").strip()
+
+    # Kunlik avtomatik ishlar (Toshkent vaqti, HH:MM)
+    report_time: tuple[int, int] = _parse_hhmm(os.getenv("REPORT_TIME", ""), (19, 30))
+    backup_time: tuple[int, int] = _parse_hhmm(os.getenv("BACKUP_TIME", ""), (23, 30))
+
+    # Telefon raqamini sonli klaviatura bilan terish uchun Mini App (HTTPS URL).
+    # Bo'sh bo'lsa tugma ko'rsatilmaydi — raqam oddiy matn sifatida yoziladi.
+    phone_webapp_url: str = os.getenv("PHONE_WEBAPP_URL", "").strip()
 
     def validate(self) -> list[str]:
         """Majburiy sozlamalarni tekshiradi, xatolar ro'yxatini qaytaradi."""

@@ -6,8 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from bot.keyboards.reply import master_menu
-from bot.middlewares.auth import DENIED_TEXT, INACTIVE_TEXT
-from bot.utils.i18n import t
+from bot.utils.i18n import DENIED_TEXT, INACTIVE_TEXT, t
 from database.models import User
 
 router = Router(name="fallback")
@@ -17,8 +16,9 @@ router.message.filter(F.chat.type == "private")
 @router.message(Command("post_about", "close_topics", "groupid", "topicid"))
 async def group_only_command(message: Message) -> None:
     await message.answer(
-        "ℹ️ Bu buyruq faqat guruhda ishlaydi. / Эта команда работает только в группе.\n\n"
-        "Uni guruh ichida (kerak bo'lsa tegishli topic ichida) yozing."
+        "ℹ️ Bu buyruq faqat guruhda ishlaydi — uni guruh ichida yozing.\n"
+        "ℹ️ Эта команда работает только в группе.\n"
+        "ℹ️ This command only works in the group."
     )
 
 

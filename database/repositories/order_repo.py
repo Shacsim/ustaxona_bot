@@ -90,6 +90,44 @@ class OrderRepository:
         )
         return list(result.scalars().all())
 
+    async def known_customer(self, phone: str) -> tuple[str | None, int]:
+        """Shu raqam bilan oldingi buyurtmalar: (oxirgi ism, soni)."""
+        rows = (
+            await self.session.execute(
+                select(Order.customer_name)
+                .where(Order.customer_phone == phone)
+                .order_by(Order.created_at.desc())
+            )
+        ).all()
+        if not rows:
+            return None, 0
+        return rows[0][0], len(rows)
+
+    async def list_ready_between(
+        self,
+        since: datetime | None,
+        until: datetime | None = None,
+        completed_by: int | None = None,
+    ) -> list[Order]:
+        """Davr ichida tayyor bo'lgan buyurtmalar (eskisi birinchi)."""
+        q = select(Order).where(Order.status == OrderStatus.READY)
+        if since is not None:
+            q = q.where(Order.completed_at >= since)
+        if until is not None:
+            q = q.where(Order.completed_at < until)
+        if completed_by is not None:
+            q = q.where(Order.completed_by == completed_by)
+        q = q.order_by(Order.completed_at.asc())
+        return list((await self.session.execute(q)).scalars().all())
+
+    async def count_pending_by(self, created_by: int) -> int:
+        result = await self.session.execute(
+            select(func.count())
+            .select_from(Order)
+            .where(Order.status == OrderStatus.PENDING, Order.created_by == created_by)
+        )
+        return int(result.scalar_one())
+
     # ---------- Statistika ----------
 
     async def count_by_status(self, status: OrderStatus) -> int:

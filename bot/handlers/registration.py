@@ -1,6 +1,6 @@
 """Ro'yxatdan o'tish: /start → til tanlash → ism → (admin tasdig'i) → menyu.
 
-/start har safar til tanlovini ko'rsatadi (uz/ru) — ro'yxatdan o'tgan usta
+/start har safar til tanlovini ko'rsatadi (uz/ru/en) — ro'yxatdan o'tgan usta
 ham tilni istalgan payt almashtirishi mumkin.
 
 ADMIN_IDS dagi foydalanuvchilar ro'yxatdan o'tishi bilan faol ADMIN bo'ladi.
@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.keyboards.inline import approve_master_kb, language_kb
 from bot.keyboards.reply import master_menu
 from bot.states import RegistrationStates
-from bot.utils.i18n import t
+from bot.utils.i18n import LANG_NAMES, LANGS, t
 from bot.utils.validators import valid_name
 from config import settings
 from database.models import User, UserRole
@@ -48,7 +48,7 @@ async def choose_language(
     user: User | None,
 ) -> None:
     lang = callback.data.split(":")[1]
-    if lang not in ("uz", "ru"):
+    if lang not in LANGS:
         lang = "uz"
     await callback.answer()
 
@@ -121,21 +121,22 @@ async def process_name(
 
     await message.answer(t("reg_wait_approval", lang, name=escape(name)))
 
-    # Adminlarga tasdiqlash so'rovi (admin paneli o'zbekcha)
-    admin_tg_ids = {a.telegram_id for a in await repo.list_active_admins()}
-    admin_tg_ids |= settings.admin_ids
-    notify_text = (
-        "🆕 <b>Yangi usta ro'yxatdan o'tdi</b>\n\n"
-        f"👤 Ism: <b>{escape(name)}</b>\n"
-        f"🌐 Til: {'🇺🇿 O‘zbekcha' if lang == 'uz' else '🇷🇺 Русский'}\n"
-        f"🆔 Telegram ID: <code>{message.from_user.id}</code>\n"
-        f"👤 Username: @{message.from_user.username or '—'}\n\n"
-        "Tasdiqlaysizmi?"
-    )
-    for admin_id in admin_tg_ids:
+    # Adminlarga tasdiqlash so'rovi — har biriga o'z tilida
+    admins = {tg: "uz" for tg in settings.admin_ids}
+    for a in await repo.list_active_admins():
+        admins[a.telegram_id] = a.language
+    for admin_id, admin_lang in admins.items():
+        notify_text = t(
+            "adm_new_master",
+            admin_lang,
+            name=escape(name),
+            language=LANG_NAMES.get(lang, lang),
+            tg_id=message.from_user.id,
+            username=escape(message.from_user.username or "—"),
+        )
         try:
             await bot.send_message(
-                admin_id, notify_text, reply_markup=approve_master_kb(new_user.id)
+                admin_id, notify_text, reply_markup=approve_master_kb(new_user.id, admin_lang)
             )
         except TelegramAPIError:
             logger.warning("Adminga (%s) xabar yuborib bo'lmadi", admin_id)

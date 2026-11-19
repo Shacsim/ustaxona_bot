@@ -46,6 +46,12 @@ class UserRepository:
         result = await self.session.execute(select(User).order_by(User.created_at))
         return list(result.scalars().all())
 
+    async def list_active(self) -> list[User]:
+        result = await self.session.execute(
+            select(User).where(User.is_active.is_(True)).order_by(User.created_at)
+        )
+        return list(result.scalars().all())
+
     async def list_active_admins(self) -> list[User]:
         result = await self.session.execute(
             select(User).where(

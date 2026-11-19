@@ -9,8 +9,9 @@ logger = logging.getLogger(__name__)
 router = Router(name="errors")
 
 USER_ERROR_TEXT = (
-    "⚠️ Kutilmagan xatolik yuz berdi.\n\n"
-    "Iltimos, qaytadan urinib ko'ring. Muammo takrorlansa, administratorga ayting."
+    "⚠️ Kutilmagan xatolik yuz berdi. Qaytadan urinib ko'ring.\n"
+    "⚠️ Произошла ошибка. Попробуйте ещё раз.\n"
+    "⚠️ Something went wrong. Please try again."
 )
 
 
@@ -24,7 +25,7 @@ async def global_error_handler(event: ErrorEvent) -> bool:
             await event.update.message.answer(USER_ERROR_TEXT)
         elif event.update.callback_query is not None:
             await event.update.callback_query.answer(
-                "⚠️ Xatolik yuz berdi. Qaytadan urinib ko'ring.", show_alert=True
+                "⚠️ Xatolik / Ошибка / Error — qaytadan urinib ko'ring.", show_alert=True
             )
     except Exception:  # noqa: BLE001 — xabar berish ham muvaffaqiyatsiz bo'lsa, jim log
         logger.exception("Failed to notify user about the error")

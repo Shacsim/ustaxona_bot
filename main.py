@@ -5,7 +5,8 @@ Ishga tushirish tartibi:
   2) DB sessiya fabrikasi;
   3) Middlewarelar (sessiya → foydalanuvchi → authorization);
   4) Routerlar (tartib muhim!);
-  5) Polling.
+  5) Kunlik avtomatik ishlar (hisobot 19:30, zaxira) — fon vazifalari;
+  6) Polling.
 """
 
 import asyncio
@@ -24,12 +25,14 @@ from bot.handlers import (
     errors,
     fallback,
     group_tools,
+    inventory,
     menu,
     new_order,
     registration,
     search,
 )
 from bot.middlewares import AuthMiddleware, DbSessionMiddleware, UserLoaderMiddleware
+from bot.services.scheduler import start_scheduler
 from config import settings
 from database.engine import create_session_factory
 
@@ -60,6 +63,8 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     dp = Dispatcher(storage=MemoryStorage())
+    # Handler'larga kwargs sifatida uzatiladi (masalan, qo'lda zaxira olish uchun)
+    dp["session_factory"] = session_factory
 
     # Middlewarelar: sessiya → foydalanuvchi (har bir update uchun)
     dp.update.outer_middleware(DbSessionMiddleware(session_factory))
@@ -67,7 +72,7 @@ async def main() -> None:
 
     # Himoyalangan routerlar: faqat ro'yxatdan o'tgan faol xodimlar
     auth = AuthMiddleware()
-    for protected in (menu, new_order, complete_order, search, admin):
+    for protected in (menu, new_order, complete_order, search, inventory, admin):
         protected.router.message.middleware(auth)
         protected.router.callback_query.middleware(auth)
 
@@ -79,18 +84,30 @@ async def main() -> None:
     dp.include_router(new_order.router)
     dp.include_router(complete_order.router)
     dp.include_router(search.router)
+    dp.include_router(inventory.router)
     dp.include_router(admin.router)
     dp.include_router(fallback.router)
 
-    await bot.set_my_commands(
-        [BotCommand(command="start", description="Botni ishga tushirish")]
-    )
+    start_descriptions = {
+        None: "Botni ishga tushirish / tilni tanlash",
+        "uz": "Botni ishga tushirish / tilni tanlash",
+        "ru": "Запустить бота / выбрать язык",
+        "en": "Start the bot / choose language",
+    }
+    for code, desc in start_descriptions.items():
+        await bot.set_my_commands(
+            [BotCommand(command="start", description=desc)], language_code=code
+        )
+
+    jobs = start_scheduler(bot, session_factory)
 
     logger.info("Bot started")
-    await bot.delete_webhook(drop_pending_updates=True)
+    await bot.delete_webhook(drop_pending_updates=False)
     try:
         await dp.start_polling(bot)
     finally:
+        for job in jobs:
+            job.cancel()
         await bot.session.close()
         logger.info("Bot stopped")
 

@@ -2,7 +2,7 @@
 
 AuthMiddleware — himoyalangan routerlarga faqat ro'yxatdan o'tgan va
 faol foydalanuvchilarni o'tkazadi. Guruh xabarlariga aralashmaydi
-(ular alohida group_guard routerida ko'riladi).
+(ular alohida group_tools routerida ko'riladi).
 
 AdminOnlyMiddleware — faqat adminlar uchun.
 """
@@ -13,16 +13,9 @@ from typing import Any
 from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
-DENIED_TEXT = (
-    "❌ Siz ushbu tizimdan foydalanish huquqiga ega emassiz. "
-    "Administrator bilan bog'laning.\n\n"
-    "❌ У вас нет доступа к этой системе. Свяжитесь с администратором."
-)
-INACTIVE_TEXT = (
-    "⏳ Profilingiz hali administrator tomonidan tasdiqlanmagan. "
-    "Iltimos, kuting.\n\n"
-    "⏳ Ваш профиль ещё не подтверждён администратором. Пожалуйста, подождите."
-)
+from bot.utils.i18n import DENIED_TEXT, INACTIVE_TEXT, t
+
+__all__ = ["AdminOnlyMiddleware", "AuthMiddleware", "DENIED_TEXT", "INACTIVE_TEXT"]
 
 
 def _is_private(event: TelegramObject) -> bool:
@@ -37,7 +30,7 @@ async def _deny(event: TelegramObject, text: str) -> None:
     if isinstance(event, Message):
         await event.answer(text)
     elif isinstance(event, CallbackQuery):
-        await event.answer(text, show_alert=True)
+        await event.answer(text[:200], show_alert=True)
 
 
 class AuthMiddleware(BaseMiddleware):
@@ -68,6 +61,7 @@ class AdminOnlyMiddleware(BaseMiddleware):
     ) -> Any:
         user = data.get("user")
         if user is None or not user.is_active or not user.is_admin:
-            await _deny(event, "❌ Bu bo'lim faqat adminlar uchun.")
+            lang = user.language if user is not None else "uz"
+            await _deny(event, t("admin_only", lang))
             return None
         return await handler(event, data)
