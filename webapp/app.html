@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Ustaxona</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-secondary-bg-color, #f2f3f5);
+    --card: var(--tg-theme-bg-color, #ffffff);
+    --text: var(--tg-theme-text-color, #111827);
+    --hint: var(--tg-theme-hint-color, #6b7280);
+    --link: var(--tg-theme-link-color, #2563eb);
+    --accent: var(--tg-theme-button-color, #2563eb);
+    --accent-text: var(--tg-theme-button-text-color, #ffffff);
+    --line: color-mix(in srgb, var(--hint) 22%, transparent);
+    --soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --ok: #16a34a; --warn: #d97706; --bad: #dc2626;
+    --r: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-bottom: 84px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .hidden { display: none !important; }
+
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 12px 16px 8px; display: flex; align-items: center; gap: 10px; }
+  header .t { flex: 1; min-width: 0; }
+  header h1 { font-size: 20px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header small { color: var(--hint); font-size: 12px; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--soft); color: var(--accent); font-weight: 700; cursor: pointer; }
+
+  main { padding: 0 12px; }
+  .card { background: var(--card); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
+  .card h3 { margin: 0 0 10px; font-size: 15px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .between { justify-content: space-between; }
+  .muted { color: var(--hint); font-size: 13px; }
+  .grow { flex: 1; min-width: 0; }
+
+  .seg { display: flex; background: var(--card); border-radius: 12px; padding: 3px; margin-bottom: 10px; }
+  .seg button { flex: 1; border: 0; background: transparent; padding: 8px 6px; border-radius: 9px; font-weight: 600; font-size: 14px; color: var(--hint); cursor: pointer; }
+  .seg button.on { background: var(--accent); color: var(--accent-text); }
+  .chips { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; scrollbar-width: none; }
+  .chips button { border: 1px solid var(--line); background: var(--card); padding: 6px 12px; border-radius: 999px; white-space: nowrap; font-size: 13px; cursor: pointer; }
+  .chips button.on { border-color: var(--accent); color: var(--accent); background: var(--soft); font-weight: 600; }
+
+  .item { background: var(--card); border-radius: var(--r); padding: 12px 14px; margin-bottom: 8px; cursor: pointer; }
+  .item .top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .num { font-weight: 800; font-size: 16px; }
+  .badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--accent); white-space: nowrap; }
+  .badge.warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+  .badge.ok { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+  .badge.bad { background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); }
+  .item .desc { white-space: pre-line; overflow-wrap: anywhere; }
+  .price { font-weight: 700; white-space: nowrap; }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .stat { background: var(--card); border-radius: var(--r); padding: 12px; }
+  .stat b { display: block; font-size: 18px; margin-top: 2px; overflow-wrap: anywhere; }
+  .stat span { color: var(--hint); font-size: 12px; }
+
+  label.f { display: block; font-size: 13px; color: var(--hint); margin: 12px 2px 6px; }
+  .input { width: 100%; border: 1.5px solid var(--line); background: var(--card); border-radius: 12px; padding: 12px 14px; outline: 0; font-size: 16px; }
+  .input:focus { border-color: var(--accent); }
+  .input.big { font-size: 22px; font-weight: 700; letter-spacing: .4px; }
+  textarea.input { min-height: 90px; resize: vertical; }
+  .btn { display: block; width: 100%; border: 0; border-radius: 12px; padding: 14px; font-weight: 700; font-size: 15px; background: var(--accent); color: var(--accent-text); cursor: pointer; margin-top: 14px; }
+  .btn.ghost { background: var(--soft); color: var(--accent); }
+  .btn.danger { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+  .btn:disabled { opacity: .5; }
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btns .btn { margin-top: 0; }
+  .phone { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); background: var(--card); border-radius: 12px; padding: 0 14px; }
+  .phone:focus-within { border-color: var(--accent); }
+  .phone .pre { font-size: 22px; font-weight: 700; white-space: nowrap; }
+  .phone input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; padding: 12px 0; font-size: 22px; font-weight: 700; letter-spacing: .4px; }
+  .suggest { display: inline-block; margin-top: 8px; border: 0; background: var(--soft); color: var(--accent); padding: 8px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+  .total { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--soft); font-weight: 600; }
+
+  .list-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .list-row:last-child { border-bottom: 0; }
+  .empty { text-align: center; color: var(--hint); padding: 30px 10px; }
+
+  nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--card); border-top: 1px solid var(--line); display: flex; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  nav button { flex: 1; border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--hint); padding: 4px 0; cursor: pointer; }
+  nav button i { font-style: normal; font-size: 21px; line-height: 1.1; }
+  nav button.on { color: var(--accent); font-weight: 700; }
+
+  .sheet-bg { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.4); display: flex; align-items: flex-end; }
+  .sheet { width: 100%; max-height: 92vh; overflow-y: auto; background: var(--bg); border-radius: 18px 18px 0 0; padding: 8px 14px calc(18px + env(safe-area-inset-bottom)); animation: up .18s ease-out; }
+  .sheet .grab { width: 38px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 10px; }
+  .sheet h2 { font-size: 18px; margin: 4px 2px 12px; }
+  @keyframes up { from { transform: translateY(40px); opacity: .5; } to { transform: none; opacity: 1; } }
+
+  .toast { position: fixed; left: 16px; right: 16px; bottom: 92px; z-index: 30; background: #111827; color: #fff; padding: 12px 14px; border-radius: 12px; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+  .loader { text-align: center; padding: 40px; color: var(--hint); }
+  .center { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  a.tel { color: var(--link); text-decoration: none; font-weight: 600; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 14px; }
+  .kv span { color: var(--hint); }
+</style>
+</head>
+<body>
+<header class="hidden" id="hdr">
+  <div class="t"><h1 id="hTitle">Ustaxona</h1><small id="hSub"></small></div>
+  <button class="avatar" id="avatar" type="button"></button>
+</header>
+<main id="main"><div class="loader">…</div></main>
+<nav id="nav" class="hidden"></nav>
+<div id="sheetRoot"></div>
+
+<script>
+(function () {
+"use strict";
+var tg = window.Telegram && window.Telegram.WebApp;
+var BASE = location.pathname.split("/app")[0] || "/ustaxona";
+
+/* ---------------- i18n ---------------- */
+var I = {
+  uz: {
+    orders: "Buyurtmalar", neworder: "Yangi", stock: "Ombor", reports: "Hisobot", admin: "Admin",
+    pending: "Kutayotgan", ready: "Tayyor", search: "Raqam, ism yoki telefon…",
+    today: "Bugun", week: "Hafta", month: "Oy", all: "Jami", days: "kun", todayW: "bugun", yesterday: "kecha",
+    noOrders: "Buyurtmalar yo'q", customer: "Mijoz", phone: "Telefon", task: "Nima qilish kerak",
+    accepted: "Qabul qilgan", completed: "Tayyorlagan", work: "Bajarilgan ishlar", price: "Xizmat haqqi",
+    createdAt: "Qabul qilingan", completedAt: "Tayyor bo'lgan", markReady: "✅ Tayyor deb belgilash",
+    workPh: "Har bir ishni yangi qatordan yozing", pricePh: "Masalan: 250000",
+    confirmReady: "Buyurtma tayyor deb belgilansinmi? Guruhga e'lon chiqadi.",
+    readyDone: "Buyurtma tayyor! Guruhga e'lon yuborildi.", readyDoneNoGroup: "Tayyor deb belgilandi (guruhga yuborilmadi).",
+    newTitle: "Yangi buyurtma", custPhone: "Mijoz telefon raqami", custName: "Mijoz ismi",
+    namePh: "Ism familiya", taskPh: "Muammo yoki vazifa", known: "Bazada bor:", prevOrders: "ta oldingi buyurtma",
+    accept: "✅ Buyurtmani qabul qilish", created: "Buyurtma qabul qilindi", createdNoGroup: "Qabul qilindi (guruhga yuborilmadi)",
+    stockSummary: "Omborim", kinds: "Mahsulot turi", units: "Jami dona", value: "Ombor qiymati",
+    todayIn: "Bugun sotib olindi", todayOut: "Bugun sotildi", profit: "Foyda",
+    bought: "📥 Sotib oldim", sold: "📤 Sotdim", products: "Mahsulotlar", history: "Tarix",
+    inMoves: "Sotib olinganlar", outMoves: "Sotilganlar", undo: "↩️ Oxirgi yozuvni bekor qilish",
+    undoConfirm: "Oxirgi yozuv bekor qilinsinmi?", undone: "Bekor qilindi",
+    product: "Mahsulot", productPh: "Masalan: SSD 256GB", newProduct: "yangi mahsulot",
+    qty: "Soni", unitBuy: "Bir donasining narxi (sotib olish)", unitSell: "Bir donasining narxi (sotuv)",
+    inStock: "omborda", pcs: "dona", cost: "tannarx", save: "Saqlash", total: "Jami", estProfit: "Taxminiy foyda",
+    noStock: "Ombor bo'sh — avval «Sotib oldim» orqali qo'shing", choose: "Tanlang…",
+    savedIn: "Omborga qo'shildi", savedOut: "Sotuv yozildi",
+    income: "Buyurtmalardan daromad", sales: "Ombordan sotuv", purchases: "Sotib olingan",
+    ordersCnt: "buyurtma", pdfMine: "📄 Mening hisobotim (PDF)", pdfPending: "📋 Kutayotganlar (PDF)",
+    pdfReady: "✅ Tayyorlar (PDF)", pdfSent: "PDF bot chatiga yuborildi 📩",
+    pdfNote: "PDF fayllar bot chatiga yuboriladi.",
+    stats: "Statistika", totalOrders: "Jami buyurtma", revenue: "Jami tushum", staff: "Faol xodimlar",
+    incomeBy: "Ustalar daromadi", masters: "Ustalar", activate: "Faollashtirish", block: "Bloklash", del: "O'chirish",
+    active: "faol", inactive: "nofaol", adminRole: "admin", confirmDel: "Usta o'chirilsinmi?",
+    broadcast: "E'lon yuborish", toMasters: "Ustalarga", toGroup: "Guruhga", bcPh: "E'lon matni…",
+    send: "Yuborish", bcSent: "E'lon yuborildi", backup: "💾 Zaxira nusxa (hozir)", backupSent: "Zaxira bot chatiga yuborildi",
+    profile: "Profil", language: "Til", role: "Rol", master: "Usta", reportAt: "Kunlik hisobot har kuni",
+    openTg: "Ilovani Telegram ichida oching", notReg: "Avval botda ro'yxatdan o'ting: /start",
+    retry: "Qayta urinish", close: "Yopish", phoneBad: "Telefon raqami to'liq emas",
+    call: "Qo'ng'iroq", hello: "Salom"
+  },
+  ru: {
+    orders: "Заказы", neworder: "Новый", stock: "Склад", reports: "Отчёты", admin: "Админ",
+    pending: "В ожидании", ready: "Готовые", search: "Номер, имя или телефон…",
+    today: "Сегодня", week: "Неделя", month: "Месяц", all: "Всё", days: "дн.", todayW: "сегодня", yesterday: "вчера",
+    noOrders: "Заказов нет", customer: "Клиент", phone: "Телефон", task: "Что сделать",
+    accepted: "Принял", completed: "Выполнил", work: "Выполненные работы", price: "Стоимость",
+    createdAt: "Принят", completedAt: "Готов", markReady: "✅ Отметить готовым",
+    workPh: "Каждую работу с новой строки", pricePh: "Например: 250000",
+    confirmReady: "Отметить заказ готовым? В группе появится объявление.",
+    readyDone: "Заказ готов! Объявление отправлено в группу.", readyDoneNoGroup: "Отмечен готовым (в группу не отправлено).",
+    newTitle: "Новый заказ", custPhone: "Телефон клиента", custName: "Имя клиента",
+    namePh: "Имя фамилия", taskPh: "Проблема или задача", known: "Уже в базе:", prevOrders: "прошлых заказов",
+    accept: "✅ Принять заказ", created: "Заказ принят", createdNoGroup: "Принят (в группу не отправлено)",
+    stockSummary: "Мой склад", kinds: "Видов товара", units: "Всего штук", value: "Стоимость склада",
+    todayIn: "Куплено сегодня", todayOut: "Продано сегодня", profit: "Прибыль",
+    bought: "📥 Купил", sold: "📤 Продал", products: "Товары", history: "История",
+    inMoves: "Покупки", outMoves: "Продажи", undo: "↩️ Отменить последнюю запись",
+    undoConfirm: "Отменить последнюю запись?", undone: "Отменено",
+    product: "Товар", productPh: "Например: SSD 256GB", newProduct: "новый товар",
+    qty: "Количество", unitBuy: "Цена за штуку (покупка)", unitSell: "Цена за штуку (продажа)",
+    inStock: "на складе", pcs: "шт.", cost: "себест.", save: "Сохранить", total: "Итого", estProfit: "Примерная прибыль",
+    noStock: "Склад пуст — сначала добавьте через «Купил»", choose: "Выберите…",
+    savedIn: "Добавлено на склад", savedOut: "Продажа записана",
+    income: "Доход по заказам", sales: "Продажи со склада", purchases: "Куплено",
+    ordersCnt: "заказов", pdfMine: "📄 Мой отчёт (PDF)", pdfPending: "📋 В ожидании (PDF)",
+    pdfReady: "✅ Готовые (PDF)", pdfSent: "PDF отправлен в чат бота 📩",
+    pdfNote: "PDF-файлы отправляются в чат бота.",
+    stats: "Статистика", totalOrders: "Всего заказов", revenue: "Общая выручка", staff: "Активных сотрудников",
+    incomeBy: "Доход мастеров", masters: "Мастера", activate: "Активировать", block: "Заблокировать", del: "Удалить",
+    active: "активен", inactive: "неактивен", adminRole: "админ", confirmDel: "Удалить мастера?",
+    broadcast: "Отправить объявление", toMasters: "Мастерам", toGroup: "В группу", bcPh: "Текст объявления…",
+    send: "Отправить", bcSent: "Объявление отправлено", backup: "💾 Резервная копия (сейчас)", backupSent: "Копия отправлена в чат бота",
+    profile: "Профиль", language: "Язык", role: "Роль", master: "Мастер", reportAt: "Ежедневный отчёт в",
+    openTg: "Откройте приложение внутри Telegram", notReg: "Сначала зарегистрируйтесь в боте: /start",
+    retry: "Повторить", close: "Закрыть", phoneBad: "Номер телефона неполный",
+    call: "Позвонить", hello: "Здравствуйте"
+  },
+  en: {
+    orders: "Orders", neworder: "New", stock: "Stock", reports: "Reports", admin: "Admin",
+    pending: "Pending", ready: "Ready", search: "Number, name or phone…",
+    today: "Today", week: "Week", month: "Month", all: "All", days: "d", todayW: "today", yesterday: "yesterday",
+    noOrders: "No orders", customer: "Customer", phone: "Phone", task: "What to do",
+    accepted: "Accepted by", completed: "Completed by", work: "Work done", price: "Price",
+    createdAt: "Accepted", completedAt: "Ready at", markReady: "✅ Mark as ready",
+    workPh: "One item per line", pricePh: "Example: 250000",
+    confirmReady: "Mark this order as ready? It will be announced in the group.",
+    readyDone: "Order is ready! Posted to the group.", readyDoneNoGroup: "Marked ready (not posted to the group).",
+    newTitle: "New order", custPhone: "Customer phone", custName: "Customer name",
+    namePh: "Full name", taskPh: "Problem or task", known: "Already known:", prevOrders: "previous orders",
+    accept: "✅ Accept order", created: "Order accepted", createdNoGroup: "Accepted (not posted to the group)",
+    stockSummary: "My stock", kinds: "Product types", units: "Total pcs", value: "Stock value",
+    todayIn: "Bought today", todayOut: "Sold today", profit: "Profit",
+    bought: "📥 I bought", sold: "📤 I sold", products: "Products", history: "History",
+    inMoves: "Purchases", outMoves: "Sales", undo: "↩️ Undo last entry",
+    undoConfirm: "Undo the last entry?", undone: "Undone",
+    product: "Product", productPh: "Example: SSD 256GB", newProduct: "new product",
+    qty: "Quantity", unitBuy: "Price per unit (purchase)", unitSell: "Price per unit (sale)",
+    inStock: "in stock", pcs: "pcs", cost: "cost", save: "Save", total: "Total", estProfit: "Estimated profit",
+    noStock: "Stock is empty — add items via «I bought» first", choose: "Choose…",
+    savedIn: "Added to stock", savedOut: "Sale recorded",
+    income: "Income from orders", sales: "Stock sales", purchases: "Bought",
+    ordersCnt: "orders", pdfMine: "📄 My report (PDF)", pdfPending: "📋 Pending (PDF)",
+    pdfReady: "✅ Ready (PDF)", pdfSent: "PDF sent to the bot chat 📩",
+    pdfNote: "PDF files are sent to the bot chat.",
+    stats: "Statistics", totalOrders: "Total orders", revenue: "Total revenue", staff: "Active staff",
+    incomeBy: "Income by technician", masters: "Technicians", activate: "Activate", block: "Block", del: "Delete",
+    active: "active", inactive: "inactive", adminRole: "admin", confirmDel: "Delete this technician?",
+    broadcast: "Send announcement", toMasters: "Technicians", toGroup: "Group", bcPh: "Announcement text…",
+    send: "Send", bcSent: "Announcement sent", backup: "💾 Backup (now)", backupSent: "Backup sent to the bot chat",
+    profile: "Profile", language: "Language", role: "Role", master: "Technician", reportAt: "Daily report at",
+    openTg: "Please open the app inside Telegram", notReg: "Register in the bot first: /start",
+    retry: "Retry", close: "Close", phoneBad: "The phone number is incomplete",
+    call: "Call", hello: "Hello"
+  }
+};
+var CUR = { uz: "so'm", ru: "сум", en: "UZS" };
+var lang = "uz", L = I.uz;
+
+/* ---------------- yordamchilar ---------------- */
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function strip(s) { return String(s || "").replace(/<[^>]+>/g, ""); }
+function money(v) { return (v == null ? "—" : String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " " + CUR[lang]); }
+function tz(d) { return new Date(d); }
+function fdt(iso) {
+  if (!iso) return "—";
+  return tz(iso).toLocaleString("ru-RU", { timeZone: "Asia/Tashkent", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+function daysAgo(iso) {
+  var f = function (d) { return d.toLocaleDateString("en-CA", { timeZone: "Asia/Tashkent" }); };
+  var a = new Date(f(new Date())), b = new Date(f(tz(iso)));
+  var n = Math.round((a - b) / 86400000);
+  return n <= 0 ? L.todayW : n === 1 ? L.yesterday : n + " " + L.days;
+}
+function digits(v) { return String(v || "").replace(/\D/g, ""); }
+function haptic(kind) { try { tg.HapticFeedback.notificationOccurred(kind); } catch (e) {} }
+function tap() { try { tg.HapticFeedback.impactOccurred("light"); } catch (e) {} }
+
+var toastTimer;
+function toast(msg, ok) {
+  var el = $("toast");
+  if (!el) { el = document.createElement("div"); el.id = "toast"; el.className = "toast"; document.body.appendChild(el); }
+  el.textContent = strip(msg);
+  el.classList.remove("hidden");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { el.classList.add("hidden"); }, 2800);
+  if (ok !== undefined) haptic(ok ? "success" : "error");
+}
+function confirmBox(text) {
+  return new Promise(function (res) {
+    if (tg && tg.showConfirm && tg.initData) tg.showConfirm(text, res); else res(window.confirm(text));
+  });
+}
+
+function api(method, path, body) {
+  var opts = { method: method, headers: { "X-Telegram-Init-Data": (tg && tg.initData) || "" } };
+  if (body) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
+  return fetch(BASE + "/api" + path, opts).then(function (r) {
+    return r.json().catch(function () { return {}; }).then(function (j) {
+      if (!r.ok) { var e = new Error(j.message || j.error || ("HTTP " + r.status)); e.code = j.error; e.status = r.status; throw e; }
+      return j;
+    });
+  });
+}
+function fail(e) { toast(e.message || "Error", false); }
+
+/* Tugmani so'rov davomida bloklash */
+function busy(btn, promise) {
+  btn.disabled = true;
+  return promise.finally(function () { btn.disabled = false; });
+}
+
+/* ---------------- holat ---------------- */
+var S = { me: null, tab: "orders", ordersSeg: "pending", readyPeriod: "month", q: "", incomePeriod: "today",
+          histKind: "out", adminPeriod: "month", inv: null };
+
+/* ---------------- sheet (pastdan chiquvchi oyna) ---------------- */
+var sheetStack = 0;
+function openSheet(title, html, onMount) {
+  var bg = document.createElement("div");
+  bg.className = "sheet-bg";
+  bg.innerHTML = '<div class="sheet"><div class="grab"></div><h2>' + esc(title) + "</h2>" + html + "</div>";
+  bg.addEventListener("click", function (e) { if (e.target === bg) closeSheet(); });
+  $("sheetRoot").appendChild(bg);
+  sheetStack++;
+  if (tg && tg.BackButton) tg.BackButton.show();
+  if (onMount) onMount(bg.querySelector(".sheet"));
+  return bg;
+}
+function closeSheet() {
+  var root = $("sheetRoot");
+  if (root.lastChild) { root.removeChild(root.lastChild); sheetStack--; }
+  if (sheetStack <= 0 && tg && tg.BackButton) tg.BackButton.hide();
+}
+
+/* ---------------- navigatsiya ---------------- */
+function tabs() {
+  var t = [["orders", "📋", L.orders], ["new", "➕", L.neworder], ["stock", "📦", L.stock], ["reports", "📊", L.reports]];
+  if (S.me && S.me.user.is_admin) t.push(["admin", "⚙️", L.admin]);
+  return t;
+}
+function renderNav() {
+  $("nav").innerHTML = tabs().map(function (x) {
+    return '<button type="button" data-tab="' + x[0] + '" class="' + (S.tab === x[0] ? "on" : "") + '"><i>' + x[1] + "</i>" + esc(x[2]) + "</button>";
+  }).join("");
+  $("nav").querySelectorAll("button").forEach(function (b) {
+    b.onclick = function () { tap(); go(b.dataset.tab); };
+  });
+}
+function go(tab) {
+  S.tab = tab;
+  renderNav();
+  window.scrollTo(0, 0);
+  ({ orders: viewOrders, "new": viewNew, stock: viewStock, reports: viewReports, admin: viewAdmin })[tab]();
+}
+function setMain(html) { $("main").innerHTML = html; }
+function loading() { setMain('<div class="loader">…</div>'); }
+
+function chips(items, active, attr) {
+  return '<div class="chips">' + items.map(function (p) {
+    return '<button type="button" ' + attr + '="' + p + '" class="' + (p === active ? "on" : "") + '">' + esc(L[p]) + "</button>";
+  }).join("") + "</div>";
+}
+
+/* ================= BUYURTMALAR ================= */
+function orderMatches(o, q) {
+  if (!q) return true;
+  q = q.toLowerCase().trim();
+  var dq = digits(q);
+  return String(o.number) === q.replace("#", "") ||
+    (o.customer_name || "").toLowerCase().indexOf(q) >= 0 ||
+    (o.description || "").toLowerCase().indexOf(q) >= 0 ||
+    (dq.length >= 3 && digits(o.customer_phone).indexOf(dq) >= 0);
+}
+
+function viewOrders() {
+  var seg = '<div class="seg"><button type="button" data-seg="pending" class="' + (S.ordersSeg === "pending" ? "on" : "") + '">⏳ ' + L.pending +
+    '</button><button type="button" data-seg="ready" class="' + (S.ordersSeg === "ready" ? "on" : "") + '">✅ ' + L.ready + "</button></div>";
+  var per = S.ordersSeg === "ready" ? chips(["today", "week", "month", "all"], S.readyPeriod, "data-per") : "";
+  setMain(seg + per + '<input class="input" id="q" type="search" placeholder="' + esc(L.search) + '" value="' + esc(S.q) + '" style="margin-bottom:10px">' +
+    '<div id="olist"><div class="loader">…</div></div>' +
+    '<button class="btn ghost" id="opdf" type="button">' + (S.ordersSeg === "ready" ? L.pdfReady : L.pdfPending) + "</button>");
+  document.querySelectorAll("[data-seg]").forEach(function (b) { b.onclick = function () { tap(); S.ordersSeg = b.dataset.seg; viewOrders(); }; });
+  document.querySelectorAll("[data-per]").forEach(function (b) { b.onclick = function () { tap(); S.readyPeriod = b.dataset.per; viewOrders(); }; });
+  $("opdf").onclick = function () {
+    busy(this, api("POST", "/pdf", { kind: S.ordersSeg, period: S.readyPeriod }).then(function () { toast(L.pdfSent, true); }).catch(fail));
+  };
+  var path = S.ordersSeg === "ready" ? "/orders?status=ready&period=" + S.readyPeriod : "/orders?status=pending";
+  api("GET", path).then(function (j) {
+    var orders = j.orders;
+    function draw() {
+      var list = orders.filter(function (o) { return orderMatches(o, S.q); });
+      $("olist").innerHTML = list.length ? list.map(orderItem).join("") : '<div class="empty">' + L.noOrders + "</div>";
+      $("olist").querySelectorAll("[data-n]").forEach(function (el) {
+        el.onclick = function () { tap(); openOrder(orders.filter(function (o) { return String(o.number) === el.dataset.n; })[0]); };
+      });
+    }
+    $("q").oninput = function () { S.q = this.value; draw(); };
+    draw();
+  }).catch(function (e) { $("olist").innerHTML = '<div class="empty">' + esc(strip(e.message)) + "</div>"; });
+}
+
+function orderItem(o) {
+  var badge = o.status === "pending"
+    ? '<span class="badge warn">⏳ ' + daysAgo(o.created_at) + "</span>"
+    : '<span class="badge ok">✅ ' + fdt(o.completed_at) + "</span>";
+  var right = o.status === "ready" ? '<span class="price">' + money(o.price) + "</span>" : "";
+  return '<div class="item" data-n="' + o.number + '"><div class="top"><span class="num">#' + o.number + "</span>" + badge +
+    '<span class="grow"></span>' + right + "</div>" +
+    "<div><b>" + esc(o.customer_name || "—") + '</b> <span class="muted">' + esc(o.customer_phone || "") + "</span></div>" +
+    '<div class="desc muted">' + esc(o.status === "ready" ? (o.work_done || "") : (o.description || "")) + "</div>" +
+    '<div class="muted" style="margin-top:4px">👨‍🔧 ' + esc(o.master || "—") + "</div></div>";
+}
+
+function openOrder(o) {
+  if (!o) return;
+  var kv = '<div class="card"><div class="kv">' +
+    "<span>" + L.customer + "</span><b>" + esc(o.customer_name || "—") + "</b>" +
+    "<span>" + L.phone + "</span>" + (o.customer_phone ? '<a class="tel" href="tel:' + esc(o.customer_phone) + '">' + esc(o.customer_phone) + " 📞</a>" : "<b>—</b>") +
+    "<span>" + L.task + '</span><div class="desc">' + esc(o.description || "—") + "</div>" +
+    "<span>" + L.createdAt + "</span><div>" + fdt(o.created_at) + " · " + daysAgo(o.created_at) + "</div>" +
+    "<span>" + L.accepted + "</span><div>" + esc(o.created_by || "—") + "</div>";
+  if (o.status === "ready") {
+    kv += "<span>" + L.work + '</span><div class="desc">' + esc(o.work_done || "—") + "</div>" +
+      "<span>" + L.price + "</span><b>" + money(o.price) + "</b>" +
+      "<span>" + L.completedAt + "</span><div>" + fdt(o.completed_at) + "</div>" +
+      "<span>" + L.completed + "</span><div>" + esc(o.completed_by || "—") + "</div>";
+  }
+  kv += "</div></div>";
+  var form = o.status === "pending"
+    ? '<label class="f">' + L.work + '</label><textarea class="input" id="rwork" placeholder="' + esc(L.workPh) + '"></textarea>' +
+      '<label class="f">' + L.price + '</label><input class="input big" id="rprice" inputmode="numeric" placeholder="' + esc(L.pricePh) + '">' +
+      '<button class="btn" id="rgo" type="button">' + L.markReady + "</button>"
+    : "";
+  openSheet("#" + o.number + (o.status === "ready" ? " · ✅ " + L.ready : " · ⏳ " + L.pending), kv + form, function (sh) {
+    var btn = sh.querySelector("#rgo");
+    if (!btn) return;
+    var price = sh.querySelector("#rprice");
+    price.oninput = function () { var d = digits(price.value); price.value = d ? money(+d).replace(" " + CUR[lang], "") : ""; };
+    btn.onclick = function () {
+      var work = sh.querySelector("#rwork").value.trim();
+      var p = digits(price.value);
+      confirmBox(L.confirmReady).then(function (yes) {
+        if (!yes) return;
+        busy(btn, api("POST", "/orders/" + o.number + "/complete", { work_done: work, price: p }).then(function (j) {
+          closeSheet();
+          toast(j.published ? L.readyDone : L.readyDoneNoGroup, true);
+          viewOrders();
+        }).catch(fail));
+      });
+    };
+  });
+}
+
+/* ================= YANGI BUYURTMA ================= */
+/* Telefon: "+998" o'zgarmas prefiks, maydonga 9 ta mahalliy raqam yoziladi.
+   Xorijiy raqam: maydonni "+" bilan boshlash (prefiks yashirinadi). */
+function fmtPhone(v) {
+  v = String(v || "");
+  var d = digits(v);
+  if (v.trim().charAt(0) === "+") {
+    if (d.indexOf("998") === 0) d = d.slice(3); else return "+" + d.slice(0, 15);
+  }
+  if (d.length > 9 && d.indexOf("998") === 0) d = d.slice(3);
+  d = d.slice(0, 9);
+  var out = d.slice(0, 2);
+  if (d.length > 2) out += " " + d.slice(2, 5);
+  if (d.length > 5) out += " " + d.slice(5, 7);
+  if (d.length > 7) out += " " + d.slice(7, 9);
+  return out;
+}
+function phoneFull(v) {
+  v = String(v || "").trim();
+  return v.charAt(0) === "+" ? "+" + digits(v) : "+998" + digits(v);
+}
+function phoneOk(v) {
+  v = String(v || "").trim();
+  var d = digits(v);
+  return v.charAt(0) === "+" ? d.length >= 7 && d.length <= 15 : d.length === 9;
+}
+
+function viewNew() {
+  setMain('<div class="card"><h3>📥 ' + L.newTitle + "</h3>" +
+    '<label class="f">📞 ' + L.custPhone + '</label><label class="phone"><span class="pre" id="npre">+998</span><input id="nphone" type="tel" inputmode="tel" autocomplete="off" placeholder="90 123 45 67"></label>' +
+    '<div id="nknown"></div>' +
+    '<label class="f">👤 ' + L.custName + '</label><input class="input" id="nname" autocomplete="off" placeholder="' + esc(L.namePh) + '">' +
+    '<label class="f">🔧 ' + L.task + '</label><textarea class="input" id="ndesc" placeholder="' + esc(L.taskPh) + '"></textarea>' +
+    '<button class="btn" id="ngo" type="button">' + L.accept + "</button></div>");
+  var phone = $("nphone"), lookupTimer;
+  phone.oninput = function () {
+    phone.value = fmtPhone(phone.value);
+    $("npre").classList.toggle("hidden", phone.value.charAt(0) === "+");
+    clearTimeout(lookupTimer);
+    $("nknown").innerHTML = "";
+    if (phoneOk(phone.value)) {
+      lookupTimer = setTimeout(function () {
+        api("GET", "/customer?phone=" + encodeURIComponent(phoneFull(phone.value))).then(function (j) {
+          if (!j.name) return;
+          $("nknown").innerHTML = '<button type="button" class="suggest" id="nsug">👤 ' + L.known + " " + esc(j.name) + " · " + j.count + " " + L.prevOrders + "</button>";
+          $("nsug").onclick = function () { tap(); $("nname").value = j.name; $("ndesc").focus(); };
+          if (!$("nname").value) $("nname").value = j.name;
+        }).catch(function () {});
+      }, 300);
+    }
+  };
+  setTimeout(function () { phone.focus(); }, 200);
+  $("ngo").onclick = function () {
+    var btn = this;
+    if (!phoneOk(phone.value)) { toast(L.phoneBad, false); phone.focus(); return; }
+    busy(btn, api("POST", "/orders", { phone: phoneFull(phone.value), name: $("nname").value, description: $("ndesc").value }).then(function (j) {
+      haptic("success");
+      setMain('<div class="card center"><div style="font-size:54px">✅</div><h2 style="margin:6px 0">#' + j.order.number + "</h2>" +
+        "<div>" + (j.published ? L.created : L.createdNoGroup) + "</div>" +
+        '<div class="muted" style="margin-top:6px">' + esc(j.order.customer_name) + " · " + esc(j.order.customer_phone) + "</div>" +
+        '<button class="btn" id="nmore" type="button">➕ ' + L.newTitle + '</button><button class="btn ghost" id="nlist" type="button">📋 ' + L.orders + "</button></div>");
+      $("nmore").onclick = viewNew;
+      $("nlist").onclick = function () { S.ordersSeg = "pending"; go("orders"); };
+    }).catch(fail));
+  };
+}
+
+/* ================= OMBOR ================= */
+function viewStock() {
+  loading();
+  api("GET", "/inventory").then(function (j) {
+    S.inv = j;
+    var s = j.summary, td = j.today;
+    var prods = j.products.filter(function (p) { return p.quantity > 0; });
+    var html = '<div class="stats">' +
+      stat(L.kinds, s.kinds) + stat(L.units, s.units + " " + L.pcs) +
+      stat(L.value, money(s.value)) + stat(L.profit + " · " + L.today.toLowerCase(), money(td.profit)) +
+      stat(L.todayIn, td.in_units + " · " + money(td.in_sum)) + stat(L.todayOut, td.out_units + " · " + money(td.out_sum)) + "</div>" +
+      '<div class="btns" style="margin-bottom:10px"><button class="btn" id="sbuy" type="button">' + L.bought + '</button><button class="btn" id="ssell" type="button">' + L.sold + "</button></div>" +
+      '<div class="card"><h3>📦 ' + L.products + "</h3>" +
+      (prods.length ? prods.map(function (p) {
+        return '<div class="list-row"><div class="grow"><b>' + esc(p.name) + '</b><div class="muted">' + L.cost + " " + money(p.avg_cost) + "</div></div>" +
+          '<span class="badge">' + p.quantity + " " + L.pcs + "</span></div>";
+      }).join("") : '<div class="empty">' + L.noStock + "</div>") + "</div>" +
+      '<div class="seg"><button type="button" data-h="out" class="' + (S.histKind === "out" ? "on" : "") + '">💸 ' + L.outMoves +
+      '</button><button type="button" data-h="in" class="' + (S.histKind === "in" ? "on" : "") + '">🧾 ' + L.inMoves + "</button></div>" +
+      '<div class="card" id="hist"><div class="loader">…</div></div>' +
+      (j.last_move ? '<button class="btn danger" id="sundo" type="button">' + L.undo + "</button>" : "");
+    setMain(html);
+    $("sbuy").onclick = function () { tap(); moveSheet("buy"); };
+    $("ssell").onclick = function () { tap(); if (!prods.length) { toast(L.noStock, false); return; } moveSheet("sell"); };
+    document.querySelectorAll("[data-h]").forEach(function (b) { b.onclick = function () { tap(); S.histKind = b.dataset.h; viewStock(); }; });
+    if ($("sundo")) $("sundo").onclick = function () {
+      var m = j.last_move, btn = this;
+      confirmBox(L.undoConfirm + "\n\n" + (m.kind === "in" ? "📥 " : "📤 ") + m.product + " × " + m.quantity + " — " + money(m.total)).then(function (yes) {
+        if (!yes) return;
+        busy(btn, api("POST", "/inventory/undo", { move_id: m.id }).then(function () { toast(L.undone, true); viewStock(); }).catch(fail));
+      });
+    };
+    api("GET", "/inventory/moves?kind=" + S.histKind).then(function (h) {
+      $("hist").innerHTML = h.moves.length ? h.moves.map(function (m) {
+        return '<div class="list-row"><div class="grow"><b>' + esc(m.product) + "</b> × " + m.quantity +
+          '<div class="muted">🕐 ' + fdt(m.created_at) + " · " + money(m.unit_price) + "/" + L.pcs + "</div></div>" +
+          '<div style="text-align:right"><div class="price">' + money(m.total) + "</div>" +
+          (m.kind === "out" ? '<div class="muted">📈 ' + money(m.profit) + "</div>" : "") + "</div></div>";
+      }).join("") : '<div class="empty">—</div>';
+    }).catch(fail);
+  }).catch(function (e) { setMain('<div class="empty">' + esc(strip(e.message)) + "</div>"); });
+}
+function stat(label, value) { return '<div class="stat"><span>' + esc(label) + "</span><b>" + esc(value) + "</b></div>"; }
+
+function moveSheet(kind) {
+  var prods = S.inv.products.filter(function (p) { return kind === "buy" || p.quantity > 0; });
+  var productField = kind === "buy"
+    ? '<input class="input" id="mname" list="mlist" autocomplete="off" placeholder="' + esc(L.productPh) + '"><datalist id="mlist">' +
+      prods.map(function (p) { return '<option value="' + esc(p.name) + '">'; }).join("") + "</datalist><div class=\"muted\" id=\"minfo\" style=\"margin:6px 2px 0\"></div>"
+    : '<select class="input" id="mprod"><option value="">' + esc(L.choose) + "</option>" +
+      prods.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + " · " + p.quantity + " " + L.pcs + "</option>"; }).join("") + "</select>";
+  var html = '<div class="card"><label class="f" style="margin-top:0">' + L.product + "</label>" + productField +
+    '<label class="f">' + L.qty + '</label><input class="input big" id="mqty" inputmode="numeric" value="1">' +
+    '<label class="f">' + (kind === "buy" ? L.unitBuy : L.unitSell) + '</label><input class="input big" id="mprice" inputmode="numeric" placeholder="' + esc(L.pricePh) + '">' +
+    '<div class="total" id="mtotal">' + L.total + ": —</div>" +
+    '<button class="btn" id="mgo" type="button">' + L.save + "</button></div>";
+  openSheet(kind === "buy" ? L.bought : L.sold, html, function (sh) {
+    var q = sh.querySelector("#mqty"), pr = sh.querySelector("#mprice");
+    function product() {
+      if (kind === "sell") { var id = +sh.querySelector("#mprod").value; return prods.filter(function (p) { return p.id === id; })[0]; }
+      var n = sh.querySelector("#mname").value.trim().toLowerCase().replace(/\s+/g, " ");
+      return prods.filter(function (p) { return p.name.toLowerCase().replace(/\s+/g, " ") === n; })[0];
+    }
+    function recalc() {
+      var qty = +digits(q.value) || 0, price = +digits(pr.value) || 0, p = product();
+      var txt = L.total + ": " + money(qty * price);
+      if (kind === "sell" && p) txt += " · " + L.estProfit + ": " + money((price - p.avg_cost) * qty);
+      sh.querySelector("#mtotal").textContent = txt;
+      if (kind === "buy") {
+        var nm = sh.querySelector("#mname").value.trim();
+        sh.querySelector("#minfo").textContent = p ? "📦 " + L.inStock + ": " + p.quantity + " " + L.pcs : nm ? "➕ " + L.newProduct : "";
+      }
+    }
+    pr.oninput = function () { var d = digits(pr.value); pr.value = d ? money(+d).replace(" " + CUR[lang], "") : ""; recalc(); };
+    q.oninput = function () { q.value = digits(q.value); recalc(); };
+    var sel = sh.querySelector(kind === "buy" ? "#mname" : "#mprod");
+    sel.oninput = sel.onchange = function () {
+      var p = product();
+      if (kind === "sell" && p && !pr.value && p.avg_cost) pr.value = money(p.avg_cost).replace(" " + CUR[lang], "");
+      recalc();
+    };
+    setTimeout(function () { sel.focus(); }, 150);
+    sh.querySelector("#mgo").onclick = function () {
+      var p = product(), body = { qty: digits(q.value), price: digits(pr.value) };
+      if (kind === "buy") { if (p) body.product_id = p.id; else body.name = sh.querySelector("#mname").value; }
+      else body.product_id = p ? p.id : 0;
+      busy(this, api("POST", "/inventory/" + kind, body).then(function (j) {
+        closeSheet();
+        toast((kind === "buy" ? L.savedIn : L.savedOut) + ": " + j.product.name + " × " + j.move.quantity + " · " + L.inStock + " " + j.product.quantity, true);
+        viewStock();
+      }).catch(fail));
+    };
+  });
+}
+
+/* ================= HISOBOT ================= */
+function viewReports() {
+  loading();
+  api("GET", "/income").then(function (j) {
+    var p = j.periods[S.incomePeriod];
+    setMain(chips(["today", "week", "month", "all"], S.incomePeriod, "data-ip") +
+      '<div class="stats">' +
+      stat(L.income, money(p.income)) + stat(L.orders, p.orders + " " + L.ordersCnt) +
+      stat(L.sales, money(p.sales)) + stat(L.profit, money(p.profit)) +
+      stat(L.purchases, money(p.bought)) + stat(L.purchases + " · " + L.pcs, p.bought_units) + "</div>" +
+      '<div class="card"><h3>📄 PDF</h3><div class="muted">' + L.pdfNote + "</div>" +
+      '<button class="btn" id="pm" type="button">' + L.pdfMine + " · " + L[S.incomePeriod] + "</button>" +
+      '<button class="btn ghost" id="pp" type="button">' + L.pdfPending + "</button>" +
+      '<button class="btn ghost" id="pr" type="button">' + L.pdfReady + " · " + L[S.incomePeriod] + "</button></div>" +
+      '<div class="muted" style="text-align:center;margin:8px 0">🕢 ' + L.reportAt + " " + esc(S.me.report_time) + "</div>");
+    document.querySelectorAll("[data-ip]").forEach(function (b) { b.onclick = function () { tap(); S.incomePeriod = b.dataset.ip; viewReports(); }; });
+    function pdf(kind) { return function () { busy(this, api("POST", "/pdf", { kind: kind, period: S.incomePeriod }).then(function () { toast(L.pdfSent, true); }).catch(fail)); }; }
+    $("pm").onclick = pdf("master"); $("pp").onclick = pdf("pending"); $("pr").onclick = pdf("ready");
+  }).catch(function (e) { setMain('<div class="empty">' + esc(strip(e.message)) + "</div>"); });
+}
+
+/* ================= ADMIN ================= */
+function viewAdmin() {
+  loading();
+  Promise.all([api("GET", "/admin/overview?period=" + S.adminPeriod), api("GET", "/admin/masters")]).then(function (r) {
+    var o = r[0], st = o.stats, masters = r[1].masters;
+    var inc = o.income.length ? o.income.map(function (x, i) {
+      return '<div class="list-row"><div class="grow"><b>' + (i + 1) + ". " + esc(x.name) + '</b><div class="muted">' + x.count + " " + L.ordersCnt + "</div></div><span class=\"price\">" + money(x.total) + "</span></div>";
+    }).join("") : '<div class="empty">—</div>';
+    var ms = masters.map(function (m) {
+      var acts = m.is_active
+        ? (m.id === S.me.user.id ? "" : '<button class="suggest" data-act="block" data-id="' + m.id + '">' + L.block + "</button>")
+        : '<button class="suggest" data-act="activate" data-id="' + m.id + '">' + L.activate + '</button> <button class="suggest" style="color:var(--bad)" data-act="delete" data-id="' + m.id + '">' + L.del + "</button>";
+      return '<div class="list-row"><div class="grow"><b>' + (m.is_admin ? "👑 " : "🔧 ") + esc(m.name) + "</b> " +
+        '<span class="badge ' + (m.is_active ? "ok" : "bad") + '">' + (m.is_active ? L.active : L.inactive) + "</span>" +
+        '<div class="muted">' + esc(m.username ? "@" + m.username : String(m.telegram_id)) + " · " + m.language.toUpperCase() + "</div></div>" + acts + "</div>";
+    }).join("");
+    setMain('<div class="stats">' + stat(L.totalOrders, st.total) + stat(L.pending, st.pending) + stat(L.ready, st.ready) +
+      stat(L.staff, st.active_users) + "</div>" + '<div class="card">' + stat(L.revenue, money(st.revenue)) + "</div>" +
+      '<div class="card"><h3>💰 ' + L.incomeBy + "</h3>" + chips(["today", "week", "month", "all"], S.adminPeriod, "data-ap") + inc + "</div>" +
+      '<div class="card"><h3>👨‍🔧 ' + L.masters + "</h3>" + ms + "</div>" +
+      '<div class="card"><h3>📢 ' + L.broadcast + '</h3><div class="seg" style="background:var(--bg)"><button type="button" class="on" data-bt="masters">' + L.toMasters +
+      '</button><button type="button" data-bt="group">' + L.toGroup + '</button></div><textarea class="input" id="bctext" placeholder="' + esc(L.bcPh) + '"></textarea>' +
+      '<button class="btn" id="bcgo" type="button">' + L.send + "</button></div>" +
+      '<button class="btn ghost" id="bk" type="button">' + L.backup + "</button>");
+    document.querySelectorAll("[data-ap]").forEach(function (b) { b.onclick = function () { tap(); S.adminPeriod = b.dataset.ap; viewAdmin(); }; });
+    var target = "masters";
+    document.querySelectorAll("[data-bt]").forEach(function (b) {
+      b.onclick = function () { tap(); target = b.dataset.bt; document.querySelectorAll("[data-bt]").forEach(function (x) { x.classList.toggle("on", x === b); }); };
+    });
+    $("bcgo").onclick = function () {
+      var text = $("bctext").value.trim(), btn = this;
+      if (text.length < 2) { $("bctext").focus(); return; }
+      confirmBox(L.broadcast + " → " + (target === "group" ? L.toGroup : L.toMasters) + "?").then(function (yes) {
+        if (!yes) return;
+        busy(btn, api("POST", "/admin/broadcast", { target: target, text: text }).then(function (j) {
+          $("bctext").value = "";
+          toast(L.bcSent + (target === "masters" ? " (" + j.sent + ")" : ""), true);
+        }).catch(fail));
+      });
+    };
+    $("bk").onclick = function () { busy(this, api("POST", "/admin/backup", {}).then(function () { toast(L.backupSent, true); }).catch(fail)); };
+    document.querySelectorAll("[data-act]").forEach(function (b) {
+      b.onclick = function () {
+        var act = b.dataset.act;
+        (act === "delete" ? confirmBox(L.confirmDel) : Promise.resolve(true)).then(function (yes) {
+          if (!yes) return;
+          busy(b, api("POST", "/admin/masters/" + b.dataset.id, { action: act }).then(function () { haptic("success"); viewAdmin(); }).catch(fail));
+        });
+      };
+    });
+  }).catch(function (e) { setMain('<div class="empty">' + esc(strip(e.message)) + "</div>"); });
+}
+
+/* ================= PROFIL / TIL ================= */
+function openProfile() {
+  var u = S.me.user;
+  openSheet(L.profile, '<div class="card"><div class="kv"><span>👤</span><b>' + esc(u.name) + "</b><span>" + L.role + "</span><div>" +
+    (u.is_admin ? "👑 " + L.adminRole : "🔧 " + L.master) + "</div><span>ID</span><div>" + u.telegram_id + "</div></div></div>" +
+    '<div class="card"><h3>🌐 ' + L.language + '</h3><div class="seg" style="background:var(--bg);margin:0">' +
+    [["uz", "🇺🇿 O'zbekcha"], ["ru", "🇷🇺 Русский"], ["en", "🇬🇧 English"]].map(function (x) {
+      return '<button type="button" data-lang="' + x[0] + '" class="' + (lang === x[0] ? "on" : "") + '">' + x[1] + "</button>";
+    }).join("") + "</div></div>", function (sh) {
+    sh.querySelectorAll("[data-lang]").forEach(function (b) {
+      b.onclick = function () {
+        tap();
+        api("POST", "/lang", { lang: b.dataset.lang }).then(function () {
+          S.me.user.language = b.dataset.lang;
+          applyLang(b.dataset.lang);
+          closeSheet();
+          go(S.tab);
+        }).catch(fail);
+      };
+    });
+  });
+}
+
+function applyLang(l) {
+  lang = I[l] ? l : "uz";
+  L = I[lang];
+  document.documentElement.lang = lang;
+  var u = S.me.user;
+  $("hTitle").textContent = S.me.workshop || "Ustaxona";
+  $("hSub").textContent = L.hello + ", " + u.name + (u.is_admin ? " · 👑" : "");
+  $("avatar").textContent = (u.name || "?").trim().charAt(0).toUpperCase();
+}
+
+/* ================= ishga tushirish ================= */
+function fatal(msg, retry) {
+  setMain('<div class="center"><div style="font-size:48px">🔒</div><p>' + esc(strip(msg)) + "</p>" +
+    (retry ? '<button class="btn" id="retry" type="button" style="max-width:240px">' + L.retry + "</button>" : "") + "</div>");
+  if (retry) $("retry").onclick = boot;
+}
+
+function boot() {
+  var guess = ((tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || "uz").slice(0, 2);
+  L = I[guess] || I.uz; lang = I[guess] ? guess : "uz";
+  if (!tg || !tg.initData) { fatal(L.openTg, false); return; }
+  loading();
+  api("GET", "/me").then(function (j) {
+    S.me = j;
+    applyLang(j.user.language);
+    $("hdr").classList.remove("hidden");
+    $("nav").classList.remove("hidden");
+    $("avatar").onclick = function () { tap(); openProfile(); };
+    go(S.tab);
+  }).catch(function (e) {
+    if (e.code === "not_registered") fatal(L.notReg, false);
+    else fatal(e.message, true);
+  });
+}
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+  try { tg.disableVerticalSwipes(); } catch (e) {}
+  if (tg.BackButton) tg.BackButton.onClick(closeSheet);
+}
+boot();
+})();
+</script>
+</body>
+</html>

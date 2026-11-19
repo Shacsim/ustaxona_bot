@@ -78,6 +78,12 @@ class Settings:
     # Bo'sh bo'lsa tugma ko'rsatilmaydi — raqam oddiy matn sifatida yoziladi.
     phone_webapp_url: str = os.getenv("PHONE_WEBAPP_URL", "").strip()
 
+    # To'liq Mini App (ilova): bot ichidagi veb-server va uning tashqi HTTPS manzili.
+    # WEBAPP_URL bo'sh bo'lsa — veb-server ishlaydi, lekin chatda «Ilova» tugmasi chiqmaydi.
+    webapp_url: str = os.getenv("WEBAPP_URL", "").strip()
+    web_host: str = os.getenv("WEB_HOST", "0.0.0.0").strip()
+    web_port: int = _int_or_none(os.getenv("WEB_PORT", "")) or 8080
+
     def validate(self) -> list[str]:
         """Majburiy sozlamalarni tekshiradi, xatolar ro'yxatini qaytaradi."""
         errors: list[str] = []

@@ -17,7 +17,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import BotCommand
+from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
 
 from bot.handlers import (
     admin,
@@ -33,6 +33,7 @@ from bot.handlers import (
 )
 from bot.middlewares import AuthMiddleware, DbSessionMiddleware, UserLoaderMiddleware
 from bot.services.scheduler import start_scheduler
+from bot.web.api import start_web
 from config import settings
 from database.engine import create_session_factory
 
@@ -99,7 +100,13 @@ async def main() -> None:
             [BotCommand(command="start", description=desc)], language_code=code
         )
 
+    if settings.webapp_url:
+        await bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(text="📱 Ilova", web_app=WebAppInfo(url=settings.webapp_url))
+        )
+
     jobs = start_scheduler(bot, session_factory)
+    web_runner = await start_web(bot, session_factory)
 
     logger.info("Bot started")
     await bot.delete_webhook(drop_pending_updates=False)
@@ -108,6 +115,7 @@ async def main() -> None:
     finally:
         for job in jobs:
             job.cancel()
+        await web_runner.cleanup()
         await bot.session.close()
         logger.info("Bot stopped")
 

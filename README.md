@@ -284,12 +284,29 @@ gunzip -c ustaxona_YYYYMMDD_HHMM.sql.gz | docker compose exec -T db psql -U usta
               → ⚙️ Sozlamalar
 ```
 
+### 📱 Mini App (ilova)
+
+Botni Telegram ichida to'liq ilova sifatida ham ishlatish mumkin — chatdagi
+«📱 Ilova» menyu tugmasi yoki «📱 Ilovani ochish» tugmasi orqali.
+
+* **Backend:** `bot/web/api.py` — bot jarayonining ichidagi aiohttp server (8080),
+  JSON API `/ustaxona/api/*` + sahifalar `/ustaxona/app/`, `/ustaxona/tel.html`.
+  Har so'rov Telegram `initData` imzosi bilan tekshiriladi; faqat faol xodimlar,
+  `/api/admin/*` faqat adminlar.
+* **Frontend:** `webapp/app.html` — build'siz bitta sahifa, Telegram mavzusiga
+  moslashadi, 3 tilda. Ekranlar: Buyurtmalar (qidiruv, kartochka → tayyor qilish),
+  Yangi buyurtma, Ombor, Hisobot (PDF chatga yuboriladi), Admin.
+* Buyurtma logikasi `bot/services/orders.py` da — chat bot va ilova bir xil koddan foydalanadi.
+* nginx: `location ^~ /ustaxona/ { proxy_pass http://127.0.0.1:3040; }`
+
 ### Deploy
 
 ```bash
 ./deploy/deploy.sh   # zaxira → rsync → Mini App → docker compose up --build
 # yangilanish haqida a'zolarga xabar (har biriga o'z tilida):
 ssh shacsim 'cd /home/admin/ustaxona_bot && sudo docker compose exec bot python -m scripts.announce_update --send'
+# «bot endi ilova ko'rinishida ham» xabari (ilovani ochish tugmasi bilan):
+ssh shacsim 'cd /home/admin/ustaxona_bot && sudo docker compose exec bot python -m scripts.announce_update --app --send'
 ```
 
 ---

@@ -3,6 +3,7 @@
 Ishga tushirish (serverda):
     sudo docker compose exec bot python -m scripts.announce_update          # sinov: kimga ketishini ko'rsatadi
     sudo docker compose exec bot python -m scripts.announce_update --send   # haqiqatan yuborish
+    ... --app   # «bot endi ilova ko'rinishida ham» xabari (ilovani ochish tugmasi bilan)
 """
 
 import asyncio
@@ -13,6 +14,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramAPIError
 
+from bot.keyboards.inline import open_app_kb
 from bot.keyboards.reply import master_menu
 from bot.utils.i18n import t
 from config import settings
@@ -20,7 +22,7 @@ from database.engine import create_session_factory
 from database.repositories import UserRepository
 
 
-async def main(send: bool) -> None:
+async def main(send: bool, app: bool = False) -> None:
     sf = create_session_factory()
     async with sf() as session:
         users = await UserRepository(session).list_active()
@@ -33,11 +35,18 @@ async def main(send: bool) -> None:
             if not send:
                 continue
             try:
-                await bot.send_message(
-                    u.telegram_id,
-                    t("update_announce", u.language, report=report),
-                    reply_markup=master_menu(u.language, u.is_admin),
-                )
+                if app:
+                    await bot.send_message(
+                        u.telegram_id,
+                        t("update_announce_app", u.language),
+                        reply_markup=open_app_kb(u.language),
+                    )
+                else:
+                    await bot.send_message(
+                        u.telegram_id,
+                        t("update_announce", u.language, report=report),
+                        reply_markup=master_menu(u.language, u.is_admin),
+                    )
                 ok += 1
             except TelegramAPIError as e:
                 print("   yetmadi:", e)
@@ -48,4 +57,4 @@ async def main(send: bool) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main("--send" in sys.argv))
+    asyncio.run(main("--send" in sys.argv, app="--app" in sys.argv))

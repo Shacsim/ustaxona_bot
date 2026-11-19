@@ -144,6 +144,15 @@ TEXTS = {
         "or press «❌ Cancel».",
     ),
     "menu_placeholder": _l("Amalni tanlang…", "Выберите действие…", "Choose an action…"),
+    "open_app": _l("📱 Ilovani ochish", "📱 Открыть приложение", "📱 Open the app"),
+    "app_hint": _l(
+        "📱 Botni ilova ko'rinishida ham ishlatishingiz mumkin — pastdagi tugma yoki "
+        "chatdagi «📱 Ilova» menyu tugmasi orqali.",
+        "📱 Ботом можно пользоваться и как приложением — кнопка ниже или "
+        "кнопка меню «📱 Ilova» в чате.",
+        "📱 You can also use the bot as an app — the button below or "
+        "the «📱 Ilova» menu button in the chat.",
+    ),
     "session_expired": _l(
         "⌛️ Bu amal eskirgan. Menyudan qaytadan boshlang.",
         "⌛️ Это действие устарело. Начните заново из меню.",
@@ -921,6 +930,37 @@ TEXTS = {
         "⚠️ <b>Zaxira nusxa olinmadi!</b>\n\n<code>{err}</code>\n\nServerni tekshiring.",
         "⚠️ <b>Резервная копия не создана!</b>\n\n<code>{err}</code>\n\nПроверьте сервер.",
         "⚠️ <b>Backup failed!</b>\n\n<code>{err}</code>\n\nPlease check the server.",
+    ),
+
+    # ---------- Yangilanish xabari: Mini App ----------
+    "update_announce_app": _l(
+        "📱 <b>Yangilik: bot endi ilova ko'rinishida ham ishlaydi!</b>\n\n"
+        "Telegram ichida to'liq ilova ochiladi — hammasi bitta ekranda:\n"
+        "📋 Buyurtmalar: kutayotgan va tayyorlar, tez qidiruv, mijozga bir bosishda qo'ng'iroq\n"
+        "➕ Yangi buyurtma: telefon → ism → vazifa, mijoz bazada bo'lsa ismi o'zi chiqadi\n"
+        "✅ Buyurtmani tayyor qilish — kartochkaning o'zidan\n"
+        "📦 Ombor: sotib oldim / sotdim, qoldiq va tarix\n"
+        "📊 Hisobot: daromad, sotuv, foyda + PDF\n\n"
+        "Ochish: pastdagi tugma yoki chatdagi «📱 Ilova» menyu tugmasi.\n"
+        "Odatdagi chat menyusi ham avvalgidek ishlayveradi. /start",
+        "📱 <b>Новинка: бот теперь работает и как приложение!</b>\n\n"
+        "Внутри Telegram открывается полноценное приложение — всё на одном экране:\n"
+        "📋 Заказы: в ожидании и готовые, быстрый поиск, звонок клиенту в одно касание\n"
+        "➕ Новый заказ: телефон → имя → задача, имя известного клиента подставится само\n"
+        "✅ Отметить заказ готовым — прямо из карточки\n"
+        "📦 Склад: купил / продал, остатки и история\n"
+        "📊 Отчёты: доход, продажи, прибыль + PDF\n\n"
+        "Открыть: кнопка ниже или кнопка меню «📱 Ilova» в чате.\n"
+        "Обычное меню в чате тоже работает как раньше. /start",
+        "📱 <b>New: the bot now works as an app too!</b>\n\n"
+        "A full app opens right inside Telegram — everything on one screen:\n"
+        "📋 Orders: pending and ready, quick search, call the customer in one tap\n"
+        "➕ New order: phone → name → task, known customers are filled in automatically\n"
+        "✅ Mark an order as ready — straight from its card\n"
+        "📦 Stock: bought / sold, current stock and history\n"
+        "📊 Reports: income, sales, profit + PDF\n\n"
+        "Open it: the button below or the «📱 Ilova» menu button in the chat.\n"
+        "The usual chat menu keeps working as before. /start",
     ),
 
     # ---------- Yangilanish xabari ----------

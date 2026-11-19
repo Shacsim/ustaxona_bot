@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Serverga deploy: kod → /home/admin/ustaxona_bot, Mini App → /var/www/ustaxona,
-# keyin docker compose qayta yig'adi (migratsiya avtomatik).
+# Serverga deploy: kod → /home/admin/ustaxona_bot, keyin docker compose qayta
+# yig'adi (migratsiya avtomatik). Mini App bot ichidagi veb-serverdan beriladi:
+# nginx shacsimdev.uz/ustaxona/ → 127.0.0.1:3040.
 # Serverdagi .env va backups/ ga tegilmaydi.
 set -euo pipefail
 HOST=${HOST:-shacsim}
@@ -15,9 +16,6 @@ rsync -az --delete --no-owner --no-group --rsync-path="sudo rsync" \
   --exclude venv --exclude .venv --exclude .git --exclude __pycache__ \
   --exclude .env --exclude backups --exclude '*.sql.gz' \
   ./ "$HOST:$DIR/"
-
-echo "→ Mini App (telefon raqami)"
-ssh "$HOST" "sudo install -D -m 644 $DIR/webapp/tel.html /var/www/ustaxona/tel.html"
 
 echo "→ Qayta yig'ish va ishga tushirish"
 ssh "$HOST" "cd $DIR && sudo docker compose up -d --build && sleep 8 && sudo docker compose logs --tail 25 bot"

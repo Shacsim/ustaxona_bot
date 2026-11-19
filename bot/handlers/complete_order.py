@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.keyboards.inline import confirm_complete_kb
 from bot.keyboards.reply import cancel_kb, master_menu
-from bot.services import group_publisher
+from bot.services import orders as orders_service
 from bot.states import CompleteOrderStates
 from bot.utils.formatters import fmt_price, fmt_work_done
 from bot.utils.i18n import btn_variants, t
@@ -103,31 +103,22 @@ async def confirm_complete(
 ) -> None:
     lang = user.language
     data = await state.get_data()
-    repo = OrderRepository(session)
-
-    order = await repo.mark_ready(
-        order_id=data["order_id"],
-        work_done=data["work_done"],
-        price=data["price"],
-        completed_by=user.id,
-        ready_message_id=None,
-    )
-    if order is None:
+    try:
+        result = await orders_service.complete_order(
+            session, bot, user, data["order_id"], data["work_done"], data["price"]
+        )
+    except orders_service.OrderStateError:
+        await state.clear()
+        await callback.message.edit_text(t("already_ready", lang, n=data["order_number"]))
+        await callback.answer()
+        return
+    if result is None:
         await state.clear()
         await callback.message.edit_text(t("order_vanished", lang))
         await callback.answer()
         return
-
-    logger.info("Order #%s marked as ready by %s", order.order_number, user.full_name)
-
-    ready_msg_id = await group_publisher.publish_ready(bot, order)
-    if ready_msg_id is not None:
-        order.ready_message_id = ready_msg_id
-        await session.commit()
-        await group_publisher.update_pending_as_done(bot, order)
-        note = t("group_sent_ready", lang)
-    else:
-        note = t("group_send_failed_ready", lang)
+    order, published = result
+    note = t("group_sent_ready" if published else "group_send_failed_ready", lang)
 
     await state.clear()
     await callback.message.edit_text(

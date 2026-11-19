@@ -17,7 +17,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.keyboards.inline import approve_master_kb, language_kb
+from bot.keyboards.inline import approve_master_kb, language_kb, open_app_kb
 from bot.keyboards.reply import master_menu
 from bot.states import RegistrationStates
 from bot.utils.i18n import LANG_NAMES, LANGS, t
@@ -29,6 +29,12 @@ from database.repositories import UserRepository
 logger = logging.getLogger(__name__)
 router = Router(name="registration")
 router.message.filter(F.chat.type == "private")
+
+
+async def _offer_app(message: Message, lang: str) -> None:
+    kb = open_app_kb(lang)
+    if kb is not None:
+        await message.answer(t("app_hint", lang), reply_markup=kb)
 
 
 @router.message(CommandStart())
@@ -61,6 +67,7 @@ async def choose_language(
                 t("welcome_back", lang, name=escape(user.full_name)),
                 reply_markup=master_menu(lang, user.is_admin),
             )
+            await _offer_app(callback.message, lang)
         else:
             await callback.message.answer(t("pending_approval", lang))
         return
@@ -117,6 +124,7 @@ async def process_name(
             t("reg_admin_welcome", lang, name=escape(name)),
             reply_markup=master_menu(lang, is_admin=True),
         )
+        await _offer_app(message, lang)
         return
 
     await message.answer(t("reg_wait_approval", lang, name=escape(name)))

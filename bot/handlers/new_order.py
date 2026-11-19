@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.keyboards.inline import confirm_new_order_kb
 from bot.keyboards.reply import cancel_kb, master_menu, phone_kb, suggest_kb
-from bot.services import group_publisher
+from bot.services import orders as orders_service
 from bot.states import NewOrderStates
 from bot.utils.i18n import btn_variants, t
 from bot.utils.validators import parse_phone, valid_description, valid_name
@@ -148,29 +148,17 @@ async def confirm_order(
 ) -> None:
     lang = user.language
     data = await state.get_data()
-    repo = OrderRepository(session)
-
-    # Poyga holati: tasdiqlash orasida boshqa usta buyurtma yaratgan bo'lishi
-    # mumkin — raqam band bo'lsa, avtomatik ravishda yangisini olamiz.
-    number: int = data["order_number"]
-    if await repo.get_by_number(number) is not None:
-        number = await repo.next_number()
-
-    order = await repo.create(
-        order_number=number,
-        created_by=user.id,
-        customer_name=data["customer_name"],
-        customer_phone=data["customer_phone"],
+    order, published = await orders_service.create_order(
+        session,
+        bot,
+        user,
+        phone=data["customer_phone"],
+        name=data["customer_name"],
         description=data["description"],
+        number=data["order_number"],
     )
-    logger.info("Order #%s created by %s", number, user.full_name)
-
-    message_id = await group_publisher.publish_pending(bot, order)
-    if message_id is not None:
-        await repo.set_pending_message_id(order.id, message_id)
-        note = t("group_sent_pending", lang)
-    else:
-        note = t("group_send_failed", lang)
+    number = order.order_number
+    note = t("group_sent_pending" if published else "group_send_failed", lang)
 
     await state.clear()
     await callback.message.edit_text(t("order_created", lang, n=number, note=note))

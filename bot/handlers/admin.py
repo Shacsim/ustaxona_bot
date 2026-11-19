@@ -22,6 +22,7 @@ from bot.keyboards.inline import (
     income_period_kb,
     master_detail_kb,
     masters_list_kb,
+    open_app_kb,
 )
 from bot.keyboards.reply import BTN_ADMIN, cancel_kb, master_menu
 from bot.middlewares import AdminOnlyMiddleware
@@ -120,6 +121,12 @@ async def activate_master(
     logger.info("Master %s activated", master.full_name)
     await _edit(callback, t("adm_activated", lang, name=escape(master.full_name)))
     await _notify_master(bot, master, t("approved_notice", master.language), with_menu=True)
+    kb = open_app_kb(master.language)
+    if kb is not None:
+        try:
+            await bot.send_message(master.telegram_id, t("app_hint", master.language), reply_markup=kb)
+        except TelegramAPIError:
+            pass
     await callback.answer()
 
 

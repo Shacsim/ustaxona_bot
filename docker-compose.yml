@@ -21,6 +21,9 @@ services:
     environment:
       # Docker ichida host nomi 'db' bo'ladi — .env dagi localhost'ni bosib o'tadi
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ustaxona}:${POSTGRES_PASSWORD:-ustaxona}@db:5432/${POSTGRES_DB:-ustaxona}
+    # Mini App veb-serveri — faqat lokal, tashqariga nginx (shacsimdev.uz/ustaxona/) orqali
+    ports:
+      - "127.0.0.1:${WEB_PUBLIC_PORT:-3040}:8080"
     depends_on:
       db:
         condition: service_healthy

@@ -1,8 +1,9 @@
 """Inline klaviaturalar va callback data formatlari."""
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 from bot.utils.i18n import btn, t
+from config import settings
 from database.models import Product, User
 
 IB = InlineKeyboardButton
@@ -10,6 +11,13 @@ IB = InlineKeyboardButton
 
 def _kb(rows: list[list[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def open_app_kb(lang: str) -> InlineKeyboardMarkup | None:
+    """«📱 Ilovani ochish» — to'liq Mini App (WEBAPP_URL sozlangan bo'lsa)."""
+    if not settings.webapp_url:
+        return None
+    return _kb([[IB(text=t("open_app", lang), web_app=WebAppInfo(url=settings.webapp_url))]])
 
 
 def language_kb() -> InlineKeyboardMarkup:
