@@ -17,6 +17,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.exceptions import TelegramNetworkError, TelegramServerError
 from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
 
 from bot.handlers import (
@@ -95,21 +96,39 @@ async def main() -> None:
         "ru": "Запустить бота / выбрать язык",
         "en": "Start the bot / choose language",
     }
-    for code, desc in start_descriptions.items():
-        await bot.set_my_commands(
-            [BotCommand(command="start", description=desc)], language_code=code
-        )
 
-    if settings.webapp_url:
-        await bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(text="📱 Ilova", web_app=WebAppInfo(url=settings.webapp_url))
-        )
+    async def setup_menu() -> None:
+        for code, desc in start_descriptions.items():
+            await bot.set_my_commands(
+                [BotCommand(command="start", description=desc)], language_code=code
+            )
+        if settings.webapp_url:
+            await bot.set_chat_menu_button(
+                menu_button=MenuButtonWebApp(
+                    text="📱 Ilova", web_app=WebAppInfo(url=settings.webapp_url)
+                )
+            )
+
+    # Menyu sozlash muhim emas: Telegram bilan vaqtinchalik uzilish botni yiqitmasin.
+    for attempt in range(1, 4):
+        try:
+            await setup_menu()
+            break
+        except (TelegramNetworkError, TelegramServerError) as e:
+            logger.warning("Menyu sozlanmadi (urinish %s/3): %s", attempt, e)
+        await asyncio.sleep(3 * attempt)
 
     jobs = start_scheduler(bot, session_factory)
     web_runner = await start_web(bot, session_factory)
 
     logger.info("Bot started")
-    await bot.delete_webhook(drop_pending_updates=False)
+    for attempt in range(1, 6):
+        try:
+            await bot.delete_webhook(drop_pending_updates=False)
+            break
+        except (TelegramNetworkError, TelegramServerError) as e:
+            logger.warning("delete_webhook (urinish %s/5): %s", attempt, e)
+            await asyncio.sleep(3 * attempt)
     try:
         await dp.start_polling(bot)
     finally:
