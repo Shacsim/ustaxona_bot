@@ -25,7 +25,7 @@ from aiohttp import web
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.keyboards.reply import master_menu
-from bot.services import group_publisher, reports
+from bot.services import group_publisher, reminders, reports
 from bot.services import orders as orders_service
 from bot.services.backup import send_backup
 from bot.utils.formatters import period_start
@@ -568,6 +568,59 @@ async def admin_broadcast(request: web.Request) -> web.Response:
         await asyncio.sleep(0.05)
     logger.info("Broadcast (Mini App) by %s: sent=%s failed=%s", user.id, sent, failed)
     return web.json_response({"ok": True, "sent": sent, "failed": failed})
+
+
+def _reminder_json(cfg: reminders.ReminderSettings) -> dict[str, Any]:
+    return {
+        "enabled": cfg.enabled,
+        "time": cfg.time_text,
+        "overdue_days": cfg.overdue_days,
+        "target": cfg.target,
+    }
+
+
+@routes.get(f"{BASE}/api/admin/reminder")
+async def admin_reminder_get(request: web.Request) -> web.Response:
+    session, _, _ = _ctx(request)
+    return web.json_response(_reminder_json(await reminders.load_settings(session)))
+
+
+@routes.post(f"{BASE}/api/admin/reminder")
+async def admin_reminder_set(request: web.Request) -> web.Response:
+    session, user, lang = _ctx(request)
+    data = await _body(request)
+    cfg = await reminders.load_settings(session)
+    if "enabled" in data:
+        cfg.enabled = bool(data["enabled"])
+    if "time" in data:
+        at = reminders.parse_time(str(data["time"]))
+        if at is None:
+            raise ApiError(400, "time", t("rem_bad_time", lang))
+        cfg.hour, cfg.minute = at
+    if "overdue_days" in data:
+        try:
+            days = int(data["overdue_days"])
+        except (TypeError, ValueError):
+            days = 0
+        if not 1 <= days <= 30:
+            raise ApiError(400, "days", t("rem_bad_time", lang))
+        cfg.overdue_days = days
+    if "target" in data:
+        if data["target"] not in reminders.TARGETS:
+            raise ApiError(400, "target")
+        cfg.target = data["target"]
+    await reminders.save_settings(session, cfg)
+    logger.info("Reminder settings changed by %s (Mini App): %s", user.id, cfg)
+    return web.json_response(_reminder_json(cfg))
+
+
+@routes.post(f"{BASE}/api/admin/reminder/test")
+async def admin_reminder_test(request: web.Request) -> web.Response:
+    _, user, _ = _ctx(request)
+    sent = await reminders.send_pending_reminders(
+        request.app[BOT], request.app[SF], only_to=user
+    )
+    return web.json_response({"ok": bool(sent)})
 
 
 @routes.post(f"{BASE}/api/admin/backup")

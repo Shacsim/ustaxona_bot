@@ -76,6 +76,12 @@
   .phone:focus-within { border-color: var(--accent); }
   .phone .pre { font-size: 22px; font-weight: 700; white-space: nowrap; }
   .phone input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; padding: 12px 0; font-size: 22px; font-weight: 700; letter-spacing: .4px; }
+  .switch { position: relative; width: 50px; height: 30px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--line); transition: .2s; cursor: pointer; }
+  .switch span::before { content: ""; position: absolute; width: 24px; height: 24px; left: 3px; top: 3px; border-radius: 50%; background: #fff; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .switch input:checked + span { background: var(--accent); }
+  .switch input:checked + span::before { transform: translateX(20px); }
   .suggest { display: inline-block; margin-top: 8px; border: 0; background: var(--soft); color: var(--accent); padding: 8px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; }
   .total { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--soft); font-weight: 600; }
 
@@ -150,6 +156,9 @@ var I = {
     incomeBy: "Ustalar daromadi", masters: "Ustalar", activate: "Faollashtirish", block: "Bloklash", del: "O'chirish",
     active: "faol", inactive: "nofaol", adminRole: "admin", confirmDel: "Usta o'chirilsinmi?",
     broadcast: "E'lon yuborish", toMasters: "Ustalarga", toGroup: "Guruhga", bcPh: "E'lon matni…",
+    remTitle: "Qolgan ishlar eslatmasi", remDesc: "Har kuni belgilangan vaqtda kutayotgan buyurtmalar ro'yxati — qachon olingani va necha kundan beri kutayotgani bilan.",
+    remOn: "Yoqilgan", remTime: "Vaqt (Toshkent)", remDays: "Kechikkan deb belgilash (kundan keyin)", remTarget: "Kimga",
+    remAll: "Hamma ustalar", remAdmins: "Faqat adminlar", remTest: "📤 Hozir sinab ko'rish (menga)", remSaved: "Saqlandi ✓", remTestSent: "Eslatma bot chatiga yuborildi 📩",
     send: "Yuborish", bcSent: "E'lon yuborildi", backup: "💾 Zaxira nusxa (hozir)", backupSent: "Zaxira bot chatiga yuborildi",
     profile: "Profil", language: "Til", role: "Rol", master: "Usta", reportAt: "Kunlik hisobot har kuni",
     openTg: "Ilovani Telegram ichida oching", notReg: "Avval botda ro'yxatdan o'ting: /start",
@@ -187,6 +196,9 @@ var I = {
     incomeBy: "Доход мастеров", masters: "Мастера", activate: "Активировать", block: "Заблокировать", del: "Удалить",
     active: "активен", inactive: "неактивен", adminRole: "админ", confirmDel: "Удалить мастера?",
     broadcast: "Отправить объявление", toMasters: "Мастерам", toGroup: "В группу", bcPh: "Текст объявления…",
+    remTitle: "Напоминание о незавершённых работах", remDesc: "Каждый день в указанное время — список заказов в ожидании: когда принят и сколько дней ждёт.",
+    remOn: "Включено", remTime: "Время (Ташкент)", remDays: "Считать просроченным через (дней)", remTarget: "Кому",
+    remAll: "Всем мастерам", remAdmins: "Только админам", remTest: "📤 Проверить сейчас (мне)", remSaved: "Сохранено ✓", remTestSent: "Напоминание отправлено в чат бота 📩",
     send: "Отправить", bcSent: "Объявление отправлено", backup: "💾 Резервная копия (сейчас)", backupSent: "Копия отправлена в чат бота",
     profile: "Профиль", language: "Язык", role: "Роль", master: "Мастер", reportAt: "Ежедневный отчёт в",
     openTg: "Откройте приложение внутри Telegram", notReg: "Сначала зарегистрируйтесь в боте: /start",
@@ -224,6 +236,9 @@ var I = {
     incomeBy: "Income by technician", masters: "Technicians", activate: "Activate", block: "Block", del: "Delete",
     active: "active", inactive: "inactive", adminRole: "admin", confirmDel: "Delete this technician?",
     broadcast: "Send announcement", toMasters: "Technicians", toGroup: "Group", bcPh: "Announcement text…",
+    remTitle: "Open jobs reminder", remDesc: "Every day at the set time — the list of pending orders, when each was received and how long it has been waiting.",
+    remOn: "Enabled", remTime: "Time (Tashkent)", remDays: "Mark as overdue after (days)", remTarget: "Recipients",
+    remAll: "All technicians", remAdmins: "Admins only", remTest: "📤 Test now (to me)", remSaved: "Saved ✓", remTestSent: "Reminder sent to the bot chat 📩",
     send: "Send", bcSent: "Announcement sent", backup: "💾 Backup (now)", backupSent: "Backup sent to the bot chat",
     profile: "Profile", language: "Language", role: "Role", master: "Technician", reportAt: "Daily report at",
     openTg: "Please open the app inside Telegram", notReg: "Register in the bot first: /start",
@@ -616,8 +631,8 @@ function viewReports() {
 /* ================= ADMIN ================= */
 function viewAdmin() {
   loading();
-  Promise.all([api("GET", "/admin/overview?period=" + S.adminPeriod), api("GET", "/admin/masters")]).then(function (r) {
-    var o = r[0], st = o.stats, masters = r[1].masters;
+  Promise.all([api("GET", "/admin/overview?period=" + S.adminPeriod), api("GET", "/admin/masters"), api("GET", "/admin/reminder")]).then(function (r) {
+    var o = r[0], st = o.stats, masters = r[1].masters, rem = r[2];
     var inc = o.income.length ? o.income.map(function (x, i) {
       return '<div class="list-row"><div class="grow"><b>' + (i + 1) + ". " + esc(x.name) + '</b><div class="muted">' + x.count + " " + L.ordersCnt + "</div></div><span class=\"price\">" + money(x.total) + "</span></div>";
     }).join("") : '<div class="empty">—</div>';
@@ -631,6 +646,7 @@ function viewAdmin() {
     }).join("");
     setMain('<div class="stats">' + stat(L.totalOrders, st.total) + stat(L.pending, st.pending) + stat(L.ready, st.ready) +
       stat(L.staff, st.active_users) + "</div>" + '<div class="card">' + stat(L.revenue, money(st.revenue)) + "</div>" +
+      reminderCard(rem) +
       '<div class="card"><h3>💰 ' + L.incomeBy + "</h3>" + chips(["today", "week", "month", "all"], S.adminPeriod, "data-ap") + inc + "</div>" +
       '<div class="card"><h3>👨‍🔧 ' + L.masters + "</h3>" + ms + "</div>" +
       '<div class="card"><h3>📢 ' + L.broadcast + '</h3><div class="seg" style="background:var(--bg)"><button type="button" class="on" data-bt="masters">' + L.toMasters +
@@ -653,6 +669,7 @@ function viewAdmin() {
         }).catch(fail));
       });
     };
+    bindReminder(rem);
     $("bk").onclick = function () { busy(this, api("POST", "/admin/backup", {}).then(function () { toast(L.backupSent, true); }).catch(fail)); };
     document.querySelectorAll("[data-act]").forEach(function (b) {
       b.onclick = function () {
@@ -664,6 +681,46 @@ function viewAdmin() {
       };
     });
   }).catch(function (e) { setMain('<div class="empty">' + esc(strip(e.message)) + "</div>"); });
+}
+
+function reminderCard(rem) {
+  var days = [1, 2, 3, 5, 7, 10].map(function (d) {
+    return '<option value="' + d + '"' + (d === rem.overdue_days ? " selected" : "") + ">" + d + "</option>";
+  }).join("");
+  return '<div class="card" id="remCard"><div class="row between"><h3 style="margin:0">⏰ ' + esc(L.remTitle) + "</h3>" +
+    '<label class="switch"><input type="checkbox" id="remOn"' + (rem.enabled ? " checked" : "") + "><span></span></label></div>" +
+    '<div class="muted" style="margin-top:6px">' + esc(L.remDesc) + "</div>" +
+    '<div id="remBody" class="' + (rem.enabled ? "" : "hidden") + '">' +
+    '<label class="f">🕐 ' + esc(L.remTime) + '</label><input class="input big" id="remTime" type="time" value="' + esc(rem.time) + '">' +
+    '<label class="f">⚠️ ' + esc(L.remDays) + '</label><select class="input" id="remDays">' + days + "</select>" +
+    '<label class="f">👥 ' + esc(L.remTarget) + '</label><div class="seg" style="background:var(--bg);margin:0">' +
+    '<button type="button" data-rt="all" class="' + (rem.target === "all" ? "on" : "") + '">' + esc(L.remAll) + "</button>" +
+    '<button type="button" data-rt="admins" class="' + (rem.target === "admins" ? "on" : "") + '">' + esc(L.remAdmins) + "</button></div></div>" +
+    '<button class="btn ghost" id="remTest" type="button">' + esc(L.remTest) + "</button></div>";
+}
+
+function bindReminder(rem) {
+  function save(patch) {
+    return api("POST", "/admin/reminder", patch).then(function (r) {
+      rem = r; toast(L.remSaved, true);
+    }).catch(function (e) { fail(e); viewAdmin(); });
+  }
+  $("remOn").onchange = function () {
+    $("remBody").classList.toggle("hidden", !this.checked);
+    save({ enabled: this.checked });
+  };
+  $("remTime").onchange = function () { if (this.value) save({ time: this.value }); };
+  $("remDays").onchange = function () { save({ overdue_days: +this.value }); };
+  document.querySelectorAll("[data-rt]").forEach(function (b) {
+    b.onclick = function () {
+      tap();
+      document.querySelectorAll("[data-rt]").forEach(function (x) { x.classList.toggle("on", x === b); });
+      save({ target: b.dataset.rt });
+    };
+  });
+  $("remTest").onclick = function () {
+    busy(this, api("POST", "/admin/reminder/test", {}).then(function () { toast(L.remTestSent, true); }).catch(fail));
+  };
 }
 
 /* ================= PROFIL / TIL ================= */
