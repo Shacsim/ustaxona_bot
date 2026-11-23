@@ -815,24 +815,27 @@ TEXTS = {
         "Guruh ID: {group}\nKutayotganlar topic: {pending}\nTayyorlar topic: {ready}\n"
         "Biz haqimizda topic: {about}\nSavol-javob topic: {faq}\nE'lonlar topic: {elon}\n\n"
         "🖥 Nomi: {wname}\n📞 Telefon: {wphone}\n📍 Manzil: {waddr}\n🕐 Ish vaqti: {whours}\n\n"
-        "📊 Kunlik hisobot: har kuni {report}\n💾 Zaxira nusxa: har kuni {backup}\n\n"
-        "Qiymatlar <code>.env</code> fayli orqali o'zgartiriladi.\n"
+        "📊 Kunlik hisobot: har kuni {report}\n💾 Zaxira nusxa: har kuni {backup}\n"
+        "⏰ Qolgan ishlar eslatmasi: {reminder}\n\n"
+        "Qiymatlar <code>.env</code> fayli orqali o'zgartiriladi (eslatma — pastdagi tugma orqali).\n"
         "ID olish: guruhda /groupid, kerakli topic ichida /topicid\n"
         "«Biz haqimizda» e'lonini yuborish: /post_about",
         "⚙️ <b>НАСТРОЙКИ</b>\n\n"
         "ID группы: {group}\nТопик ожидания: {pending}\nТопик готовых: {ready}\n"
         "Топик «О нас»: {about}\nТопик вопросов: {faq}\nТопик объявлений: {elon}\n\n"
         "🖥 Название: {wname}\n📞 Телефон: {wphone}\n📍 Адрес: {waddr}\n🕐 Часы работы: {whours}\n\n"
-        "📊 Ежедневный отчёт: каждый день в {report}\n💾 Резервная копия: каждый день в {backup}\n\n"
-        "Значения меняются через файл <code>.env</code>.\n"
+        "📊 Ежедневный отчёт: каждый день в {report}\n💾 Резервная копия: каждый день в {backup}\n"
+        "⏰ Напоминание о работах: {reminder}\n\n"
+        "Значения меняются через файл <code>.env</code> (напоминание — кнопкой ниже).\n"
         "Получить ID: в группе /groupid, внутри топика /topicid\n"
         "Отправить «О нас»: /post_about",
         "⚙️ <b>SETTINGS</b>\n\n"
         "Group ID: {group}\nPending topic: {pending}\nReady topic: {ready}\n"
         "About topic: {about}\nQ&A topic: {faq}\nAnnouncements topic: {elon}\n\n"
         "🖥 Name: {wname}\n📞 Phone: {wphone}\n📍 Address: {waddr}\n🕐 Hours: {whours}\n\n"
-        "📊 Daily report: every day at {report}\n💾 Backup: every day at {backup}\n\n"
-        "Values are changed in the <code>.env</code> file.\n"
+        "📊 Daily report: every day at {report}\n💾 Backup: every day at {backup}\n"
+        "⏰ Open jobs reminder: {reminder}\n\n"
+        "Values are changed in the <code>.env</code> file (the reminder — with the button below).\n"
         "Get IDs: /groupid in the group, /topicid inside a topic\n"
         "Post the «About us» message: /post_about",
     ),
@@ -841,6 +844,96 @@ TEXTS = {
         "❌ Bu bo'lim faqat adminlar uchun.",
         "❌ Этот раздел только для администраторов.",
         "❌ This section is for administrators only.",
+    ),
+
+    # ---------- Qolgan ishlar eslatmasi ----------
+    "rem_header": _l(
+        "⏰ <b>QOLGAN ISHLAR — {date}</b>\n"
+        "📋 Kutayotgan buyurtmalar: <b>{total}</b> ta · ⚠️ {days}+ kun kutayotgani: <b>{overdue}</b> ta\n"
+        "<i>eng uzoq kutayotgani birinchi</i>",
+        "⏰ <b>НЕЗАВЕРШЁННЫЕ РАБОТЫ — {date}</b>\n"
+        "📋 Заказов в ожидании: <b>{total}</b> · ⚠️ ждут {days}+ дн.: <b>{overdue}</b>\n"
+        "<i>дольше всех ожидающий — первым</i>",
+        "⏰ <b>OPEN JOBS — {date}</b>\n"
+        "📋 Pending orders: <b>{total}</b> · ⚠️ waiting {days}+ days: <b>{overdue}</b>\n"
+        "<i>longest waiting first</i>",
+    ),
+    "rem_row": _l(
+        "{icon} <b>#{n}</b> · {age}\n📅 {when} · 👤 {customer}\n🔧 {task}\n👨‍🔧 {master}",
+        "{icon} <b>#{n}</b> · {age}\n📅 {when} · 👤 {customer}\n🔧 {task}\n👨‍🔧 {master}",
+        "{icon} <b>#{n}</b> · {age}\n📅 {when} · 👤 {customer}\n🔧 {task}\n👨‍🔧 {master}",
+    ),
+    "rem_today": _l("bugun olingan", "принят сегодня", "received today"),
+    "rem_days": _l("{n} kundan beri kutmoqda", "ждёт {n} дн.", "waiting {n} days"),
+    "rem_footer": _l(
+        "⚠️ — kechikkan buyurtmalar. Tayyor bo'lganlarini «🛠 Buyurtmani tayyor qilish» "
+        "orqali yoping.",
+        "⚠️ — просроченные заказы. Готовые закройте через «🛠 Заказ готов».",
+        "⚠️ — overdue orders. Close finished ones with «🛠 Complete order».",
+    ),
+    "rem_none": _l(
+        "✅ <b>{date}</b>: qolgan ish yo'q — barcha buyurtmalar tayyor. Barakalla!",
+        "✅ <b>{date}</b>: незавершённых работ нет — все заказы готовы. Отлично!",
+        "✅ <b>{date}</b>: no open jobs — every order is done. Great work!",
+    ),
+    "adm_btn_reminder": _l(
+        "⏰ Qolgan ishlar eslatmasi", "⏰ Напоминание о работах", "⏰ Open jobs reminder"
+    ),
+    "rem_settings": _l(
+        "⏰ <b>QOLGAN ISHLAR ESLATMASI</b>\n\n"
+        "Har kuni belgilangan vaqtda kutayotgan buyurtmalar ro'yxati — qachon olingani va "
+        "necha kundan beri kutayotgani bilan — yuboriladi.\n\n"
+        "Holati: {status}\n🕐 Vaqt: <b>{time}</b>\n"
+        "⚠️ Kechikkan deb belgilash: <b>{days}</b> kundan keyin\n👥 Kimga: <b>{target}</b>",
+        "⏰ <b>НАПОМИНАНИЕ О НЕЗАВЕРШЁННЫХ РАБОТАХ</b>\n\n"
+        "Каждый день в указанное время отправляется список заказов в ожидании — когда "
+        "принят и сколько дней ждёт.\n\n"
+        "Статус: {status}\n🕐 Время: <b>{time}</b>\n"
+        "⚠️ Считать просроченным: через <b>{days}</b> дн.\n👥 Кому: <b>{target}</b>",
+        "⏰ <b>OPEN JOBS REMINDER</b>\n\n"
+        "Every day at the set time, the list of pending orders is sent — when each was "
+        "received and how many days it has been waiting.\n\n"
+        "Status: {status}\n🕐 Time: <b>{time}</b>\n"
+        "⚠️ Mark as overdue after: <b>{days}</b> days\n👥 Recipients: <b>{target}</b>",
+    ),
+    "rem_on": _l("✅ yoqilgan", "✅ включено", "✅ on"),
+    "rem_off": _l("⛔️ o'chirilgan", "⛔️ выключено", "⛔️ off"),
+    "rem_target_all": _l("barcha faol ustalar", "все активные мастера", "all active technicians"),
+    "rem_target_admins": _l("faqat adminlar", "только администраторы", "admins only"),
+    "rem_btn_enable": _l("✅ Yoqish", "✅ Включить", "✅ Turn on"),
+    "rem_btn_disable": _l("⛔️ O'chirish", "⛔️ Выключить", "⛔️ Turn off"),
+    "rem_btn_time": _l("🕐 Vaqt: {time}", "🕐 Время: {time}", "🕐 Time: {time}"),
+    "rem_btn_days": _l(
+        "⚠️ Kechikkan: {days} kun", "⚠️ Просрочка: {days} дн.", "⚠️ Overdue: {days} days"
+    ),
+    "rem_btn_target": _l("👥 Kimga: {target}", "👥 Кому: {target}", "👥 To: {target}"),
+    "rem_btn_test": _l(
+        "📤 Hozir sinab ko'rish (menga)", "📤 Проверить сейчас (мне)", "📤 Test now (to me)"
+    ),
+    "rem_btn_custom": _l("✏️ Boshqa vaqt", "✏️ Другое время", "✏️ Other time"),
+    "rem_pick_time": _l(
+        "🕐 Eslatma vaqtini tanlang (Toshkent vaqti):",
+        "🕐 Выберите время напоминания (по Ташкенту):",
+        "🕐 Choose the reminder time (Tashkent time):",
+    ),
+    "rem_pick_days": _l(
+        "⚠️ Buyurtma necha kun kutgach «kechikkan» deb belgilansin?",
+        "⚠️ Через сколько дней ожидания считать заказ просроченным?",
+        "⚠️ After how many days of waiting should an order count as overdue?",
+    ),
+    "rem_ask_time": _l(
+        "✏️ Vaqtni yozing, masalan: <b>19:30</b> yoki <b>8:15</b>",
+        "✏️ Напишите время, например: <b>19:30</b> или <b>8:15</b>",
+        "✏️ Type the time, for example: <b>19:30</b> or <b>8:15</b>",
+    ),
+    "rem_bad_time": _l(
+        "❌ Vaqt noto'g'ri. Masalan: <b>19:30</b>",
+        "❌ Неверное время. Например: <b>19:30</b>",
+        "❌ Invalid time. Example: <b>19:30</b>",
+    ),
+    "rem_saved": _l("✅ Saqlandi", "✅ Сохранено", "✅ Saved"),
+    "rem_test_sent": _l(
+        "📤 Eslatma sizga yuborildi", "📤 Напоминание отправлено вам", "📤 Reminder sent to you"
     ),
 
     # ---------- E'lon (broadcast) ----------

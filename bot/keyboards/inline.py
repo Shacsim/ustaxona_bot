@@ -209,6 +209,53 @@ def approve_master_kb(master_id: int, lang: str = "uz") -> InlineKeyboardMarkup:
     )
 
 
+def settings_kb(lang: str) -> InlineKeyboardMarkup:
+    return _kb(
+        [
+            [IB(text=t("adm_btn_reminder", lang), callback_data="admin:rem")],
+            [IB(text=btn("back", lang), callback_data="admin:panel")],
+        ]
+    )
+
+
+def reminder_kb(cfg, lang: str) -> InlineKeyboardMarkup:
+    target = t("rem_target_all" if cfg.target == "all" else "rem_target_admins", lang)
+    toggle = "rem_btn_disable" if cfg.enabled else "rem_btn_enable"
+    return _kb(
+        [
+            [IB(text=t(toggle, lang), callback_data="admin:rem:toggle")],
+            [IB(text=t("rem_btn_time", lang, time=cfg.time_text), callback_data="admin:rem:time")],
+            [IB(text=t("rem_btn_days", lang, days=cfg.overdue_days), callback_data="admin:rem:days")],
+            [IB(text=t("rem_btn_target", lang, target=target), callback_data="admin:rem:target")],
+            [IB(text=t("rem_btn_test", lang), callback_data="admin:rem:test")],
+            [IB(text=btn("back", lang), callback_data="admin:settings")],
+        ]
+    )
+
+
+REMINDER_TIMES = ("17:00", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00")
+
+
+def reminder_time_kb(current: str, lang: str) -> InlineKeyboardMarkup:
+    buttons = [
+        IB(text=(f"• {v} •" if v == current else v), callback_data="admin:rem:at:" + v.replace(":", ""))
+        for v in REMINDER_TIMES
+    ]
+    return _kb(
+        [buttons[i : i + 4] for i in range(0, len(buttons), 4)]
+        + [[IB(text=t("rem_btn_custom", lang), callback_data="admin:rem:custom")]]
+        + [[IB(text=btn("back", lang), callback_data="admin:rem")]]
+    )
+
+
+def reminder_days_kb(current: int, lang: str) -> InlineKeyboardMarkup:
+    row = [
+        IB(text=(f"• {d} •" if d == current else str(d)), callback_data=f"admin:rem:d:{d}")
+        for d in (1, 2, 3, 5, 7, 10)
+    ]
+    return _kb([row[:3], row[3:], [IB(text=btn("back", lang), callback_data="admin:rem")]])
+
+
 def back_to_panel_kb(lang: str) -> InlineKeyboardMarkup:
     return _kb([[IB(text=btn("back", lang), callback_data="admin:panel")]])
 

@@ -4,6 +4,7 @@ from bot.states.order_states import (
     InventoryStates,
     NewOrderStates,
     RegistrationStates,
+    ReminderStates,
     SearchStates,
 )
 
@@ -13,5 +14,6 @@ __all__ = [
     "InventoryStates",
     "NewOrderStates",
     "RegistrationStates",
+    "ReminderStates",
     "SearchStates",
 ]

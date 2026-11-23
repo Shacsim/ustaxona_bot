@@ -33,6 +33,10 @@ class InventoryStates(StatesGroup):
     confirming = State()
 
 
+class ReminderStates(StatesGroup):
+    waiting_time = State()
+
+
 class BroadcastStates(StatesGroup):
     waiting_content = State()
     confirming = State()

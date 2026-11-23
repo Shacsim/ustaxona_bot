@@ -23,13 +23,18 @@ from bot.keyboards.inline import (
     master_detail_kb,
     masters_list_kb,
     open_app_kb,
+    reminder_days_kb,
+    reminder_kb,
+    reminder_time_kb,
+    settings_kb,
 )
 from bot.keyboards.reply import BTN_ADMIN, cancel_kb, master_menu
 from bot.middlewares import AdminOnlyMiddleware
 from bot.services import group_publisher
 from bot.services.backup import send_backup
 from bot.services.reports import PERIOD_KEYS
-from bot.states import BroadcastStates
+from bot.services import reminders
+from bot.states import BroadcastStates, ReminderStates
 from bot.utils.formatters import fmt_dt, fmt_price, period_start
 from bot.utils.i18n import BUTTONS, LANG_NAMES, t
 from config import settings
@@ -396,8 +401,9 @@ async def broadcast_cancel(callback: CallbackQuery, state: FSMContext, user: Use
 
 
 @router.callback_query(F.data == "admin:settings")
-async def show_settings(callback: CallbackQuery, user: User) -> None:
+async def show_settings(callback: CallbackQuery, session: AsyncSession, user: User) -> None:
     lang = user.language
+    cfg = await reminders.load_settings(session)
 
     def mark(value) -> str:
         return f"<code>{value}</code>" if value is not None else t("adm_not_set", lang)
@@ -419,7 +425,140 @@ async def show_settings(callback: CallbackQuery, user: User) -> None:
             whours=escape(settings.workshop_working_hours) or "—",
             report="%02d:%02d" % settings.report_time,
             backup="%02d:%02d" % settings.backup_time,
+            reminder=(
+                f"{t('rem_on', lang)}, {cfg.time_text}" if cfg.enabled else t("rem_off", lang)
+            ),
         ),
-        back_to_panel_kb(lang),
+        settings_kb(lang),
     )
     await callback.answer()
+
+
+# ---------- Qolgan ishlar eslatmasi (sozlamalar) ----------
+
+
+async def _show_reminder(callback: CallbackQuery, session: AsyncSession, lang: str) -> None:
+    cfg = await reminders.load_settings(session)
+    target = t("rem_target_all" if cfg.target == "all" else "rem_target_admins", lang)
+    await _edit(
+        callback,
+        t(
+            "rem_settings",
+            lang,
+            status=t("rem_on" if cfg.enabled else "rem_off", lang),
+            time=cfg.time_text,
+            days=cfg.overdue_days,
+            target=target,
+        ),
+        reminder_kb(cfg, lang),
+    )
+
+
+@router.callback_query(F.data == "admin:rem")
+async def reminder_settings(
+    callback: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    await state.clear()
+    await _show_reminder(callback, session, user.language)
+    await callback.answer()
+
+
+@router.callback_query(F.data.in_({"admin:rem:toggle", "admin:rem:target"}))
+async def reminder_switch(callback: CallbackQuery, session: AsyncSession, user: User) -> None:
+    cfg = await reminders.load_settings(session)
+    if callback.data.endswith("toggle"):
+        cfg.enabled = not cfg.enabled
+    else:
+        cfg.target = "admins" if cfg.target == "all" else "all"
+    await reminders.save_settings(session, cfg)
+    logger.info("Reminder settings changed by %s: %s", user.id, cfg)
+    await _show_reminder(callback, session, user.language)
+    await callback.answer(t("rem_saved", user.language))
+
+
+@router.callback_query(F.data == "admin:rem:time")
+async def reminder_time_menu(callback: CallbackQuery, session: AsyncSession, user: User) -> None:
+    cfg = await reminders.load_settings(session)
+    await _edit(callback, t("rem_pick_time", user.language), reminder_time_kb(cfg.time_text, user.language))
+    await callback.answer()
+
+
+@router.callback_query(F.data.regexp(r"^admin:rem:at:\d{4}$"))
+async def reminder_time_set(callback: CallbackQuery, session: AsyncSession, user: User) -> None:
+    at = reminders.parse_time(callback.data.rsplit(":", 1)[1])
+    if at is None:
+        await callback.answer(t("rem_bad_time", user.language), show_alert=True)
+        return
+    cfg = await reminders.load_settings(session)
+    cfg.hour, cfg.minute = at
+    await reminders.save_settings(session, cfg)
+    await _show_reminder(callback, session, user.language)
+    await callback.answer(t("rem_saved", user.language))
+
+
+@router.callback_query(F.data == "admin:rem:custom")
+async def reminder_time_custom(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+    await state.set_state(ReminderStates.waiting_time)
+    await callback.message.answer(t("rem_ask_time", user.language), reply_markup=cancel_kb(user.language))
+    await callback.answer()
+
+
+@router.message(ReminderStates.waiting_time, F.text)
+async def reminder_time_typed(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    lang = user.language
+    at = reminders.parse_time(message.text or "")
+    if at is None:
+        await message.answer(t("rem_bad_time", lang))
+        return
+    cfg = await reminders.load_settings(session)
+    cfg.hour, cfg.minute = at
+    await reminders.save_settings(session, cfg)
+    await state.clear()
+    await message.answer(
+        f"{t('rem_saved', lang)}: {cfg.time_text}", reply_markup=master_menu(lang, user.is_admin)
+    )
+    target = t("rem_target_all" if cfg.target == "all" else "rem_target_admins", lang)
+    await message.answer(
+        t(
+            "rem_settings",
+            lang,
+            status=t("rem_on" if cfg.enabled else "rem_off", lang),
+            time=cfg.time_text,
+            days=cfg.overdue_days,
+            target=target,
+        ),
+        reply_markup=reminder_kb(cfg, lang),
+    )
+
+
+@router.callback_query(F.data == "admin:rem:days")
+async def reminder_days_menu(callback: CallbackQuery, session: AsyncSession, user: User) -> None:
+    cfg = await reminders.load_settings(session)
+    await _edit(callback, t("rem_pick_days", user.language), reminder_days_kb(cfg.overdue_days, user.language))
+    await callback.answer()
+
+
+@router.callback_query(F.data.regexp(r"^admin:rem:d:\d{1,2}$"))
+async def reminder_days_set(callback: CallbackQuery, session: AsyncSession, user: User) -> None:
+    days = int(callback.data.rsplit(":", 1)[1])
+    if not 1 <= days <= 30:
+        await callback.answer()
+        return
+    cfg = await reminders.load_settings(session)
+    cfg.overdue_days = days
+    await reminders.save_settings(session, cfg)
+    await _show_reminder(callback, session, user.language)
+    await callback.answer(t("rem_saved", user.language))
+
+
+@router.callback_query(F.data == "admin:rem:test")
+async def reminder_test(
+    callback: CallbackQuery,
+    bot: Bot,
+    user: User,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    await callback.answer(t("rem_test_sent", user.language))
+    await reminders.send_pending_reminders(bot, session_factory, only_to=user)
